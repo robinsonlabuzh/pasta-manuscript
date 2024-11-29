@@ -89,7 +89,6 @@ st_buffer(st_geometry(spsf), dist = 80) |>
 # Moran's I
 moran.test(spsf[["Nrgn"]], listw = direct_neigbours)
 
-
 # local moran's I
 loc <- localmoran(spsf[["Nrgn"]], listw = direct_neigbours)
 # extract the effect size
@@ -100,35 +99,34 @@ p.val.adj <- loc[, 5] |> p.adjust("BH")
 spsf$locEffect <- locEffect
 spsf$p.val.adj <- p.val.adj
 
-fill_range <- seq(-3, 8, by = 0.1)
+# Point to circles for fill
 
+spsf <- st_buffer(spsf, 50)
+
+# Detected expression
 pDetected <- ggplot() +
-  geom_sf(data = spsf, aes(color = Nrgn), size = 0.7) +
-  scale_color_distiller(palette = "BuPu", direction = 1) +
+  geom_sf(data = spsf, aes(fill = Nrgn), size = 0.7,  lwd = 0.01) +
+  scale_fill_distiller(palette = "BuPu", direction = 1) +
   geom_point(size = 0.7) +
   labs(color = "Nrgn", title = "Expression of Nrgn\n") +
   theme_void()
 
+# Local Moran's I values
 pLocEff_direct <- ggplot() +
-  geom_sf(data = spsf, aes(color = locEffect), size = 0.7) +
+  geom_sf(data = spsf, aes(fill = locEffect), size = 0.7, lwd = 0.01) +
   #geom_sf(data = spsf, aes(color = locEffect), size = 0.3) +
   labs(color = "locI(Nrgn)", title = "Local Moran's I\n(Direct neighbours)") +
   theme_void() +
-  scale_color_gradientn(colours = c("blue","white","red"), 
-                        values = rescale(c(-1.1,0,4.6)),
-                        guide = "colorbar", limits=c(-1.1,4.6))
+  scale_fill_gradientn(colours = c("blue","white","red"), 
+                        values = scales::rescale(c(-1.1,0,4.6)),
+                        guide = "colorbar", limits = c(-1.1,4.6))
 
-pLocEff_direct
-
+# Local Moran's p-alues
 pLocEff_pVal <- ggplot() +
-  geom_sf(data = spsf, aes(color = -log10(p.val.adj)), size = 0.7) +
-  scale_color_distiller(palette = "BuGn", direction = 1) +
+  geom_sf(data = spsf, aes(fill = -log10(p.val.adj)), size = 0.7, lwd = 0.01) +
+  scale_fill_distiller(palette = "BuGn", direction = 1) +
   labs(color = "-log10(adj. p-val.)", title = "Local Moran's I\n(Adjusted significance levels)") +
   theme_void()
-
-pLocEff_pVal
-
-pLocEff_direct
 
 
 spsf |>
@@ -137,8 +135,6 @@ spsf |>
   geom_point(colour = "black", pch = 21) +
   scale_fill_distiller(palette = "BuGn", direction = 1) +
   theme_light()
-
-
 
 pGeneLoc <- spsf |>
   ggplot(aes(x = Nrgn, y = locEffect, fill = -log10(p.val.adj))) +
@@ -221,7 +217,7 @@ bbox_use <- st_bbox(c(xmin = 14000, xmax = 18000, ymin = 158000, ymax = 162000))
 ))
 
 pKnn <- pKnn + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845", "#BF0D3E"), 
-                                    values = rescale(c(-3,0,5,17)),
+                                    values = scales::rescale(c(-3,0,5,17)),
                                     guide = "colorbar", limits=c(-3,17)) +
   labs(title = "Local Moran's I\n(10 Nearest Neighbours)", fill = "locI(KRT17)")
 
@@ -243,7 +239,7 @@ sfePoly <- runUnivariate(sfePoly,
 
 
 pPoly <- pPoly + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845", "#BF0D3E"), 
-                                      values = rescale(c(-3,0,5,17)),
+                                      values = scales::rescale(c(-3,0,5,17)),
                                       guide = "colorbar", limits=c(-3,17)) +
   labs(title = "Local Moran's I\n(Contiguos Neighbours)", fill = "locI(KRT17)") 
 
@@ -266,10 +262,11 @@ sfeDist <- runUnivariate(sfeDist,
 ### Figure 2 in main manuscript
 
 pDist <- pDist + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845", "#BF0D3E"), 
-                                      values = rescale(c(-3,0,5,17)),
+                                      values = scales::rescale(c(-3,0,5,17)),
                                       guide = "colorbar", limits=c(-3,17)) +
   labs(title = "Local Moran's I\n(Neighbours in 1000 pixel distance)", fill = "locI(KRT17)") +
   theme_classic()
+
 
 fig2 <- pDetected + pLocEff_direct + pLocEff_pVal + pPoly + pKnn + pDist +
   plot_layout(nrow = 2, ncol = 3) +
