@@ -60,7 +60,7 @@ ppdf <- as.data.frame(pp[['0.01']]) %>% filter(marks=="OD Mature")
 ppdf$sel <- get_sel$sel # assume they are in same order
 
 q <- ggplot(ppdf, aes(x=x, y=y, colour=sel)) + 
-  geom_point(size=0.75) +
+  geom_point(size=1) +
   scale_color_continuous(type = "viridis") +
   theme(legend.position = "none") +
   theme_light()+
@@ -107,7 +107,7 @@ pls <- lapply(zstack_list, function(zstack){
   pp_sel <- pp_ls[[zstack]][[celltype_ls]]
   p <- pp_sel |> as.data.frame() |> 
     ggplot(aes(x = x, y = y)) +
-    geom_point(color = "black", alpha = 0.3, size=0.75) +
+    geom_point(color = "black", alpha = 0.3) +
     theme_light() +
     coord_fixed() +
     ggtitle(paste0(zstack, ', (N = ',npoints(pp_sel), ')')) + 
@@ -116,7 +116,7 @@ pls <- lapply(zstack_list, function(zstack){
     p <- pp_sel |> as.data.frame() |> 
       ggplot(aes(x = x, y = y, col = get_sel$sel)) +
       scale_color_continuous(type = "viridis") +
-      geom_point(size=0.75) +
+      geom_point() +
       theme_light() +
       coord_fixed() +
       ggtitle(paste0(zstack, ', (N = ',npoints(pp_sel), ')')) + 
@@ -126,9 +126,9 @@ pls <- lapply(zstack_list, function(zstack){
 })
 
 p1 <- wrap_plots(pls, guides = 'collect', nrow = 3)
-p_total <- wrap_plots(list(p1, L_plot), ncol = 2) + plot_annotation(tag_levels = 'A')
+p_total <- wrap_plots(list(p1, L_plot), ncol = 2) + plot_annotation(tag_levels = 'A', theme = theme(plot.title = element_text(size = 14)))
 
-ggsave('outs/pp_example.pdf', plot = p_total, width = 8, height = 9)
+ggsave('outs/pp_example.pdf', plot = p_total, width = 10, height = 12)
 
 ### SI figure pp
 
@@ -170,6 +170,6 @@ p_ls_scaled <- lapply(res_ls, function(res){plotMetricPerFov(res, correction = "
 p_scaled <- wrap_plots(p_ls_scaled)
 
 
-p <- wrap_plots(list(p_homo, p_inhomo, p_scaled), nrow = 3, guides = 'collect') + plot_annotation(tag_levels = 'A')
+p <- wrap_plots(list(p_homo, p_inhomo, p_scaled), nrow = 3, guides = 'collect') + plot_annotation(tag_levels = 'A', theme = theme(plot.title = element_text(size = 14)))
 
-ggsave('outs/pp_function_comparison.pdf', plot = p, width = 10, height = 10)
+ggsave('outs/pp_function_comparison.pdf', plot = p, width = 10, height = 8)
