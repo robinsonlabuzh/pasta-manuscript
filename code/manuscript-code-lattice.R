@@ -278,7 +278,7 @@ fig2 <- pDetected + pLocEff_direct + pLocEff_pVal + pPoly + pKnn + pDist +
 
 fig2
 
-ggsave("outs/localMoranOverview.pdf", fig2, width = 12, height = 8)
+ggsave("outs/localMoranOverview.pdf", fig2, width = 8, height = 8)
 
 
 ### Supplementary Figure Lattice part
