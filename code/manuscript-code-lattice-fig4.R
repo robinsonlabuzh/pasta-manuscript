@@ -1,8 +1,3 @@
-
-devtools::install("~/projects/spatialFDA")
-devtools::install("~/projects/sosta")
-
-
 library(spatialFDA)
 library(sosta)
 library(ggplot2)
@@ -22,7 +17,7 @@ islet <- reconstructShapeDensityImage(
   spe,
   marks = "cell_category",
   image_col = "image_name",
-  image_id = "E25",
+  imageId = "E25",
   mark_select = "islet"
 ) 
 
@@ -34,8 +29,6 @@ spe_sel_df$cell_category %>% unique()
 # color palette
 group.colors <- c(exocrine = "#56B4E9", immune = "#E69F00",
                   other ="#F0E442", unknown = "#999999", islet = "#CC79A7")
-
-
 
 p_eq <- ggplot() +
   geom_point(data = spe_sel_df,
@@ -126,45 +119,40 @@ plot(Kest(pp_sub))
 metric_res1 <- calcMetricPerFov(spe_sub, c("islet"),
                                subsetby = "image_number",
                                fun = "Kest", marks = "cell_category",
-                               r_seq = seq(0, 120, length.out = 100), 
+                               rSeq = seq(0, 120, length.out = 100), 
                                by = c("patient_stage", "patient_id", "image_number"),
                                ncores = 1
 )
 
 p1.1 <- plotMetricPerFov(metric_res1,
                          correction = "iso", x = "r",
-                         image_id = "image_number",
+                         imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#D55E00")
-  
 
 p1.2 <- plotMetricPerFov(metric_res1,
-                         correction = "boder", x = "r",
-                         image_id = "image_number",
+                         correction = "border", x = "r",
+                         imageId = "image_number",
                          theo = TRUE)  + scale_color_manual(values = "#D55E00")
 
 
 p1.1 + p1.2
 
 # Option 2: Inhomogeneous global
-# Which correction ?!?!?
+
 
 # density on all cells
 plot(Kinhom(pp_sub, lambda = density(pp, bw.diggle(pp))))
 
 # density on subset
 plot(density(pp_sub, bw.diggle(pp_sub)))
-
-
 plot(Kinhom(pp_sub, lambda = density(pp_sub, bw.diggle(pp_sub))))
-
-# 
 plot(Kinhom(unmark(pp_sub), correction = "best"))
 
 
 metric_res2 <- calcMetricPerFov(spe_sub, "islet",
-                                   subsetby = "image_number",
-                                   fun = "Kinhom", marks = "cell_category",
-                                   r_seq = seq(0, 120, length.out = 100),
+                                subsetby = "image_number",
+                                fun = "Kinhom", marks = "cell_category",
+                                rSeq = seq(0, 120, length.out = 100),
                                 by = c("patient_stage", "patient_id", "image_number"),
                                 ncores = 1
 )
@@ -172,16 +160,16 @@ metric_res2 <- calcMetricPerFov(spe_sub, "islet",
 ### 
 
 p2.1 <- plotMetricPerFov(metric_res2, correction = "iso", 
-                          x = "r", image_id = "image_number",
+                          x = "r", imageId = "image_number",
                           theo = TRUE) + scale_color_manual(values = "#D55E00")
 p2.2 <- plotMetricPerFov(metric_res2, correction = "trans", 
-                       x = "r", image_id = "image_number",
+                       x = "r", imageId = "image_number",
                        theo = TRUE) + scale_color_manual(values = "#D55E00")
 p2.3 <- plotMetricPerFov(metric_res2, correction = "border", 
-                         x = "r", image_id = "image_number",
+                         x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#D55E00")
 p2.4 <- plotMetricPerFov(metric_res2, correction = "bord.modif", 
-                         x = "r", image_id = "image_number",
+                         x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#D55E00")
 
 
@@ -200,23 +188,21 @@ pp_sub <- subset(pp, marks == "islet", drop = TRUE)
 
 # Set custom window and exclude all cells outside
 pp_win <- as.ppp(superimpose(pp_sub, W =  as.owin(islet)))
-
 plot(pp_win)
-
 plot(Kest(pp_win))
 plot(Kinhom(pp_win))
 
 
-metric_res3 <- extractMetric(.speToDf(spe_sub), c("islet"),
+metric_res3 <- .extractMetric(.speToDf(spe_sub), c("islet"),
                              fun = "Kest", marks = "cell_category",
-                             r_seq = seq(0, 70, length.out = 100),
+                             rSeq = seq(0, 70, length.out = 100),
                              by = c("patient_stage", "patient_id", "image_number"),
                              window = as.owin(islet))
 
 metric_res3 <- calcMetricPerFov(spe_sub, "islet",
                                 subsetby = "image_number",
                                 fun = "Kest", marks = "cell_category",
-                                r_seq = seq(0, 70, length.out = 100),
+                                rSeq = seq(0, 70, length.out = 100),
                                 by = c("patient_stage", "patient_id", "image_number"),
                                 ncores = 1,
                                 window = as.owin(islet)
@@ -225,7 +211,7 @@ metric_res3 <- calcMetricPerFov(spe_sub, "islet",
 metric_res4 <- calcMetricPerFov(spe_sub, "islet",
                                 subsetby = "image_number",
                                 fun = "Kinhom", marks = "cell_category",
-                                r_seq = seq(0, 70, length.out = 100),
+                                rSeq = seq(0, 70, length.out = 100),
                                 by = c("patient_stage", "patient_id", "image_number"),
                                 ncores = 1,
                                 window = as.owin(islet)
@@ -234,20 +220,20 @@ metric_res4 <- calcMetricPerFov(spe_sub, "islet",
 
 
 p3.1 <- plotMetricPerFov(metric_res3, correction = "iso", 
-                 x = "r", image_id = "image_number",
+                 x = "r", imageId = "image_number",
                  theo = TRUE) + scale_color_manual(values = "#0072B2")
 
 p4.1 <- plotMetricPerFov(metric_res4, correction = "iso", 
-                         x = "r", image_id = "image_number",
+                         x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#0072B2")
 p4.2 <- plotMetricPerFov(metric_res4, correction = "trans", 
-                         x = "r", image_id = "image_number",
+                         x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#0072B2")
 p4.3 <- plotMetricPerFov(metric_res4, correction = "border", 
-                         x = "r", image_id = "image_number",
+                         x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#0072B2")
 p4.4 <- plotMetricPerFov(metric_res4, correction = "bord.modif", 
-                         x = "r", image_id = "image_number",
+                         x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#0072B2")
 
 
@@ -259,23 +245,35 @@ p3.1 + p4.1
 p4_top <- p_cell_cat + (p1.1 + p1.2) / (p2.1 + p2.2)
 p4_bot <- p_cell_islet + (p3.1 + p4.1)
 p4_tot_v1 <- p4_top / p4_bot
-
 p4_tot_v1
 
-p4_tot <- (p_cell_cat  + p1.1 + p2.1) / (p_cell_islet + p3.1 + p4.1)
+
+layout <- 
+"
+ABC
+"
+
+p4_up <- (p_cell_cat  + p1.1 + p2.1) + plot_layout(design = layout)
+p4_down <- (p_cell_islet + p3.1 + p4.1) + plot_layout(design = layout)
+
+
+# Plot for paper
+p4_tot <- p4_up / p4_down
 p4_tot <- p4_tot + plot_annotation(tag_levels = "A")
 
 p4_tot
 
-ggsave("outs/fig4.pdf", p4_tot, width = 12, height = 8)
+ggsave("outs/fig4.pdf", p4_tot, width = 10, height = 8)
 
 
- # Supplementary
 
+
+
+
+# Supplementary
 p4_supp <- (p_cell_cat + (p2.1+p2.2)/(p2.3+p2.4)) /
   (p_cell_islet + (p4.1 + p4.2) / (p4.3 + p4.4)) + plot_annotation(tag_levels = "A")
 
 p4_supp
-
 ggsave("outs/fig4-supp.pdf", p4_supp, width = 12, height = 10)
   
