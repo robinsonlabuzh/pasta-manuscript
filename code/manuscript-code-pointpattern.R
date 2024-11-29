@@ -130,64 +130,6 @@ p_total <- wrap_plots(list(p1, L_plot), ncol = 2) + plot_annotation(tag_levels =
 
 ggsave('outs/pp_example.pdf', plot = p_total, width = 8, height = 9)
 
-### code for figure of poster
-
-spe <- readRDS("data/spe.rds")
-
-#subset the data to only look at sample ID 0.01
-sub <- spe[, spe$sample_id == 0.01]
-(pp <- .ppp(sub, marks = "cluster_id"))
-
-#split the multitype point process into several single type processes
-#first, set the marks of the point process to be factors
-marks(pp) <- factor(marks(pp))
-ppls <- split(pp)
-
-selection <- c('OD Mature', 'Ependymal', 'Microglia')
-pp_sel <-  subset(pp, marks %in% selection, drop = TRUE)
-
-#PRE: list of point pattern, corresponding celltypes of interest, functions to evaluate
-#POST: result of the metric
-metricResBoot <- function(ppls, celltype, fun){
-  metric.res <- lohboot(ppls[[celltype]], fun = fun)
-  metric.res$type <- celltype
-  return(metric.res)
-}
-#PRE: celltypes, function to calculation and edge correction method
-#POST: dataframe of 
-metricResBootToDF <- function(celltype_ls, ppls, fun, edgecorr){
-  res_ls <- lapply(celltype_ls, metricResBoot, fun = fun, ppls = ppls)
-  #stick all values into a dataframe
-  res_df <- c()
-  for(i in 1:length(celltype_ls))res_df <- rbind(res_df, res_ls[[i]])
-  return(res_df)
-}
-
-#PRE: Celltypes of interest, function to analyse, edge correction to perform
-#POST: plot of the metric
-plotMetric <- function(celltype_ls, ppls, fun, edgecorr){
-  res_df <- metricResBootToDF(celltype_ls, ppls, fun, edgecorr)
-  #plot the curve
-  p <- ggplot(res_df, aes(x=r, y=res_df[[edgecorr]], color= type),size = 1, shape = 1)+
-    geom_line(size = 2)+
-    geom_ribbon(aes(ymin = lo, ymax = hi, fill = type), alpha = 0.25, show.legend = FALSE)+
-    ggtitle(paste0(fun, '-function'))+
-    geom_line(aes(x=r,y=theo, color = 'Poisson'), size = 2, linetype = "dashed")+
-    ylab(edgecorr) +
-    scale_color_manual(name='Point Processes',
-                       breaks=c('Ependymal', 'Microglia', 'OD Mature', 'Poisson'),
-                       values=c('Ependymal'='red', 'Microglia'='dark green', 'OD Mature'='blue', 'Poisson'='black'))+
-    guides(fill = "none", color = guide_legend(override.aes = list(shape = 21)) )  +
-    theme_light()+
-    ylab('K(r): isotropic correction')
-  return(p)
-}
-
-celltype_ls <- c("Ependymal", "OD Mature", "Microglia")
-p_K <- plotMetric(celltype_ls, ppls, 'Kest', 'iso')
-
-ggsave('outs/Kest.pdf', plot = p_K, width = 5, height = 3)
-
 ### SI figure pp
 
 # homogeneous functions
@@ -197,7 +139,7 @@ res_ls <- lapply(list('Kest', 'Lest', 'pcf'), function(fun){
   return(res)
 })
 
-p_ls_homo <- lapply(res_ls, function(res){plotMetricPerFov(res, theo = TRUE, correction = "iso", x = "r", image_id = 'sample_id') + theme(legend.position = 'right') + labs(colour="Slice")})
+p_ls_homo <- lapply(res_ls, function(res){plotMetricPerFov(res, theo = TRUE, correction = "iso", x = "r", imageId = 'sample_id') + theme(legend.position = 'right') + labs(colour="Slice")})
 p_homo <- wrap_plots(p_ls_homo)
 
 # inhomogeneous functions
@@ -210,8 +152,8 @@ res_ls <- lapply(list('Kinhom', 'Linhom'), function(fun){
 res_pcf <- calcMetricPerFov(spe, 'OD Mature', subsetby = 'sample_id', fun = 'pcfinhom', marks = 'cluster_id', r_seq=NULL, by = c('Animal_ID','sample_id')) 
 res_pcf <- subset(res_pcf, sample_id %in% c('-0.09', '0.01', '0.21'))
 
-p_ls_inhomo <- lapply(res_ls, function(res){plotMetricPerFov(res, correction = "iso", theo = TRUE, x = "r", image_id = 'sample_id') + theme(legend.position = 'right') + labs(colour="Slice")})
-p <- plotMetricPerFov(res_pcf, correction = "iso", theo = TRUE, x = "r", image_id = 'sample_id') + theme(legend.position = 'right') + labs(colour="Slice")
+p_ls_inhomo <- lapply(res_ls, function(res){plotMetricPerFov(res, correction = "iso", theo = TRUE, x = "r", imageId = 'sample_id') + theme(legend.position = 'right') + labs(colour="Slice")})
+p <- plotMetricPerFov(res_pcf, correction = "iso", theo = TRUE, x = "r", imageId = 'sample_id') + theme(legend.position = 'right') + labs(colour="Slice")
 
 p_ls_inhomo <- wrap_plots(p_ls_inhomo)
 p_inhomo <- wrap_plots(p_ls_inhomo, p, widths=c(2,1))
@@ -224,7 +166,7 @@ res_ls <- lapply(list('Kscaled', 'Lscaled'), function(fun){
   return(res)
 })
 
-p_ls_scaled <- lapply(res_ls, function(res){plotMetricPerFov(res, correction = "iso", theo = TRUE, x = "r", image_id = 'sample_id') + theme(legend.position = 'right') + labs(colour="Slice")})
+p_ls_scaled <- lapply(res_ls, function(res){plotMetricPerFov(res, correction = "iso", theo = TRUE, x = "r", imageId = 'sample_id') + theme(legend.position = 'right') + labs(colour="Slice")})
 p_scaled <- wrap_plots(p_ls_scaled)
 
 
