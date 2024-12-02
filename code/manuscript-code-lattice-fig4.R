@@ -17,7 +17,7 @@ islet <- reconstructShapeDensityImage(
   spe,
   marks = "cell_category",
   image_col = "image_name",
-  imageId = "E25",
+  image_id = "E25",
   mark_select = "islet"
 ) 
 
@@ -39,8 +39,6 @@ p_eq <- ggplot() +
   theme(legend.position="bottom") +
   coord_equal()
 
-p_eq
-
 
 st_fov <- st_bbox(c(xmin = min(spe_sel_df$cell_x),
                     xmax = max(spe_sel_df$cell_x), 
@@ -52,14 +50,11 @@ p_cell_cat <- ggplot() +
              aes(x = cell_x, y = cell_y, color = cell_category), size = 0.75) +
   theme_light() +
   scale_colour_manual(values=group.colors) +
-  #geom_sf(data = islet, fill = NA, color = "black", linewidth = 0.9, linetype = "dashed") +
   geom_sf(data = st_fov, fill = NA, color = "#D55E00", linewidth = 1, linetype = "dashed") +
   theme_classic() + labs(color = "", x = "", y = "") +
   theme(legend.position="bottom")
 
 p_cell_cat
-#ggsave("code/plts_poster/islet.pdf", width = 6, height = 4)
-
 
 idx <- st_intersects(st_as_sf(spe_sel_df, coords = c("cell_x", "cell_y")),islet, sparse = FALSE)
 
@@ -78,21 +73,6 @@ p_cell_islet <- ggplot() +
 
 
 p_cell_islet
-#ggsave("code/plts_poster/islet_only.pdf", width = 6, height = 4)
-
-# 
-# p_cell_islet <- ggplot() +
-#   geom_point(data = spe_sel_df,
-#              aes(x = cell_x, y = cell_y, color = cell_category), size = 0.75) +
-#   theme_light() +
-#   scale_colour_manual(values=c("white", "white","#CC79A7", "white", "white", "white", "white", "white")) +
-#   geom_sf(data = islet, fill = NA, color = "black", linewidth = 0.9, linetype = "dashed") +
-#   theme_classic() +  + labs(color = "", x = "", y = "") +
-#   theme(legend.position="bottom")  + guides(color = "none")  +
-#   scale_x_continuous(limits = c(min(spe_sel_df$cell_x), max(spe_sel_df$cell_x))) +
-#   scale_y_continuous(limits = c(min(spe_sel_df$cell_y), max(spe_sel_df$cell_y)))
-# 
-
 
 p_cell_cat + p_cell_islet  +   plot_annotation(tag_levels = c('A')) +
   #plot_layout(guides = "collect") &
@@ -127,19 +107,33 @@ metric_res1 <- calcMetricPerFov(spe_sub, c("islet"),
 p1.1 <- plotMetricPerFov(metric_res1,
                          correction = "iso", x = "r",
                          imageId = "image_number",
-                         theo = TRUE) + scale_color_manual(values = "#D55E00")
+                         theo = TRUE) + scale_color_manual(values = "#D55E00") 
+
+p1.1[["layers"]][[2]]$aes_params$linewidth <- 1
+p1.1[["layers"]][[1]]$aes_params$linewidth <- 1
+
+p1.1
 
 p1.2 <- plotMetricPerFov(metric_res1,
                          correction = "border", x = "r",
                          imageId = "image_number",
                          theo = TRUE)  + scale_color_manual(values = "#D55E00")
 
+p1.2[["layers"]][[2]]$aes_params$linewidth <- 1
+p1.2[["layers"]][[1]]$aes_params$linewidth <- 1
+
 
 p1.1 + p1.2
 
+p <- ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_line(color = "blue")
+
+p
+
+p + geom_line(linewidth = 2)
+
+
 # Option 2: Inhomogeneous global
-
-
 # density on all cells
 plot(Kinhom(pp_sub, lambda = density(pp, bw.diggle(pp))))
 
@@ -172,6 +166,20 @@ p2.4 <- plotMetricPerFov(metric_res2, correction = "bord.modif",
                          x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#D55E00")
 
+
+## 
+
+p2.1[["layers"]][[2]]$aes_params$linewidth <- 1
+p2.1[["layers"]][[1]]$aes_params$linewidth <- 1
+
+p2.2[["layers"]][[2]]$aes_params$linewidth <- 1
+p2.2[["layers"]][[1]]$aes_params$linewidth <- 1
+
+p2.3[["layers"]][[2]]$aes_params$linewidth <- 1
+p2.3[["layers"]][[1]]$aes_params$linewidth <- 1
+
+p2.4[["layers"]][[2]]$aes_params$linewidth <- 1
+p2.4[["layers"]][[1]]$aes_params$linewidth <- 1
 
 
 (p2.1+p2.2)/(p2.3+p2.4)
@@ -236,6 +244,21 @@ p4.4 <- plotMetricPerFov(metric_res4, correction = "bord.modif",
                          x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#0072B2")
 
+p3.1[["layers"]][[2]]$aes_params$linewidth <- 1
+p3.1[["layers"]][[1]]$aes_params$linewidth <- 1
+
+p4.1[["layers"]][[2]]$aes_params$linewidth <- 1
+p4.1[["layers"]][[1]]$aes_params$linewidth <- 1
+
+p4.2[["layers"]][[2]]$aes_params$linewidth <- 1
+p4.2[["layers"]][[1]]$aes_params$linewidth <- 1
+
+p4.3[["layers"]][[2]]$aes_params$linewidth <- 1
+p4.3[["layers"]][[1]]$aes_params$linewidth <- 1
+
+p4.4[["layers"]][[2]]$aes_params$linewidth <- 1
+p4.4[["layers"]][[1]]$aes_params$linewidth <- 1
+
 
 p3.1 + p4.1
 
@@ -263,11 +286,7 @@ p4_tot <- p4_tot + plot_annotation(tag_levels = "A")
 
 p4_tot
 
-ggsave("outs/fig4.pdf", p4_tot, width = 10, height = 8)
-
-
-
-
+ggsave("outs/fig4.pdf", p4_tot, width = 10, height = 7)
 
 
 # Supplementary
