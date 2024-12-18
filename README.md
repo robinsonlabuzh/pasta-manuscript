@@ -3,6 +3,11 @@
 This repository contains code to reproduce analysis and figures for the [pasta preprint](
 https://doi.org/10.48550/arXiv.2412.01561).
 
+## Installing necessary R packages
+
+- `spatialFDA` has to be installed via devtools::install_github("mjemons/spatialFDA").
+- `sosta` has to be installed via devtools::install_github("sgunz/sosta").
+
 ## R Session Info
 ```
 R version 4.3.1 (2023-06-16)
