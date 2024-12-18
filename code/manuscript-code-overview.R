@@ -27,8 +27,8 @@ library(SpatialExperiment)
 library(scran)
 
 #' Change paths accordingly
-gcm_path <- "raw_data/well11processed_expression_pd.csv"
-mdata_path <- "raw_data/well11_spatial.csv"
+gcm_path <- "data/well11processed_expression_pd.csv"
+mdata_path <- "data/well11_spatial.csv"
 
 #' Gene cell matrix
 gcm <- fread(gcm_path)
@@ -76,7 +76,8 @@ p <- plotColData(se, x = "X", y = "Y", point_size = 0.01, colour_by = cnames[1])
   scale_color_manual(values = pals::glasbey()) +
   coord_equal() +
   theme_void() +
-  theme(legend.position = "none") 
+  theme(legend.position = "none") +
+  scale_x_reverse()
 
 #### visium sample ####
 
@@ -85,7 +86,7 @@ spe <- Visium_mouseCoronal()
 # subset to only points in tissue
 spe <- subset(spe, ,in_tissue == TRUE)
 
-# normalise the sample 
+# normalise the sample
 spe <- logNormCounts(spe)
 
 lambda <- 0.5
@@ -114,6 +115,9 @@ q <- plotColData(spe, x = "pxl_col_in_fullres", y = "pxl_row_in_fullres", point_
   theme(legend.position = "none") +
   xlab('X') +
   ylab('Y')
+
+ggsave('outs/starmap.pdf', plot = p)
+ggsave('outs/visium.pdf', plot = q)
 
 plotVisium(spe, annotate = cnames[1], image = TRUE) +
   scale_color_manual(values = pals::glasbey())

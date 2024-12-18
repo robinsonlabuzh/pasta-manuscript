@@ -56,7 +56,7 @@ dim(spe)
 spe <- logNormCounts(spe)
 
 # plot
-plotVisium(spe, fill = "Nrgn", assay = "logcounts", image = FALSE)
+plotVisium(spe, annotate = "Nrgn", assay = "logcounts", image = FALSE)
 
 
 # add some values in 'colData' to annotate spots
@@ -117,7 +117,7 @@ pLocEff_direct <- ggplot() +
   #geom_sf(data = spsf, aes(color = locEffect), size = 0.3) +
   labs(color = "locI(Nrgn)", title = "Local Moran's I\n(Direct neighbours)") +
   theme_void() +
-  scale_fill_gradientn(colours = c("blue","white","red"), 
+  scale_fill_gradientn(colours = c("blue","white","red"),
                         values = scales::rescale(c(-1.1,0,4.6)),
                         guide = "colorbar", limits = c(-1.1,4.6))
 
@@ -216,7 +216,7 @@ bbox_use <- st_bbox(c(xmin = 14000, xmax = 18000, ymin = 158000, ymax = 162000))
                          bbox = bbox_use
 ))
 
-pKnn <- pKnn + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845", "#BF0D3E"), 
+pKnn <- pKnn + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845", "#BF0D3E"),
                                     values = scales::rescale(c(-3,0,5,17)),
                                     guide = "colorbar", limits=c(-3,17)) +
   labs(title = "Local Moran's I\n(10 Nearest Neighbours)", fill = "locI(KRT17)")
@@ -238,10 +238,10 @@ sfePoly <- runUnivariate(sfePoly,
 ))
 
 
-pPoly <- pPoly + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845", "#BF0D3E"), 
+pPoly <- pPoly + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845", "#BF0D3E"),
                                       values = scales::rescale(c(-3,0,5,17)),
                                       guide = "colorbar", limits=c(-3,17)) +
-  labs(title = "Local Moran's I\n(Contiguos Neighbours)", fill = "locI(KRT17)") 
+  labs(title = "Local Moran's I\n(Contiguos Neighbours)", fill = "locI(KRT17)")
 
 
 # distance
@@ -261,7 +261,7 @@ sfeDist <- runUnivariate(sfeDist,
 
 ### Figure 2 in main manuscript
 
-pDist <- pDist + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845", "#BF0D3E"), 
+pDist <- pDist + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845", "#BF0D3E"),
                                       values = scales::rescale(c(-3,0,5,17)),
                                       guide = "colorbar", limits=c(-3,17)) +
   labs(title = "Local Moran's I\n(Neighbours in 1000 pixel distance)", fill = "locI(KRT17)") +
@@ -292,27 +292,27 @@ data.frame(
   facet_grid(neighbourhood ~ .)
 
 
-logExpHist <- data.frame(KRT17 = logcounts(sfe)["KRT17",]) |> 
+logExpHist <- data.frame(KRT17 = logcounts(sfe)["KRT17",]) |>
   ggplot(aes(x = KRT17)) +
   geom_histogram() +
   theme_light()
 
 # Inspection of distribution of resulting values
-localResult(sfe, "localmoran", "KRT17")[, "Ii"] |> 
-  round(digits = 5) |> 
-  table() |> sort(decreasing = TRUE) |> 
+localResult(sfe, "localmoran", "KRT17")[, "Ii"] |>
+  round(digits = 5) |>
+  table() |> sort(decreasing = TRUE) |>
   head(n = 10)
 
-localResult(sfePoly, "localmoran", "KRT17")[, "Ii"] |> 
-  round(digits = 5) |> 
-  table() |> sort(decreasing = TRUE) |> 
+localResult(sfePoly, "localmoran", "KRT17")[, "Ii"] |>
+  round(digits = 5) |>
+  table() |> sort(decreasing = TRUE) |>
   head(n = 10)
 
 pknncont <- data.frame(
   knn = localResult(sfe, "localmoran", "KRT17")[, "Ii"],
   cont = localResult(sfePoly, "localmoran", "KRT17")[, "Ii"]
 ) |>
-  mutate(zero_neigh = ifelse((cont == 0 & knn != 0), "red", "black")) |> 
+  mutate(zero_neigh = ifelse((cont == 0 & knn != 0), "red", "black")) |>
   ggplot(aes(x = knn, y = cont, color = zero_neigh)) +
   geom_point(size = 0.5, show.legend = FALSE) +
   geom_abline(intercept = 0, slope = 1, col = "seagreen") +
@@ -324,12 +324,12 @@ pknncont <- data.frame(
   coord_fixed(ratio = 1) +
   geom_density_2d(color = "cornflowerblue") +
   scale_color_manual(values = c("black", "red"))
-  
+
 pDistcont <- data.frame(
   dist = localResult(sfeDist, "localmoran", "KRT17")[, "Ii"],
   cont = localResult(sfePoly, "localmoran", "KRT17")[, "Ii"]
 ) |>
-  mutate(zero_neigh = ifelse((cont == 0 & dist != 0), "red", "black")) |> 
+  mutate(zero_neigh = ifelse((cont == 0 & dist != 0), "red", "black")) |>
   ggplot(aes(x = dist, y = cont, color = zero_neigh)) +
   geom_point(size = 0.5, show.legend = FALSE) +
   geom_abline(intercept = 0, slope = 1, col = "seagreen") +
@@ -341,7 +341,7 @@ pDistcont <- data.frame(
   ) +
   coord_fixed(ratio = 1) +
   scale_color_manual(values = c("black", "red"))
-  
+
 data.frame(
   knn = localResult(sfe, "localmoran", "KRT17")[, "Ii"],
   cont = localResult(sfePoly, "localmoran", "KRT17")[, "Ii"]
@@ -359,7 +359,7 @@ data.frame(
 
 
 # layout for supplementary figure
-layout <- 
+layout <-
 "
 AAAA
 AAAA

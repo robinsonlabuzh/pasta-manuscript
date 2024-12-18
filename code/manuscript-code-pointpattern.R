@@ -43,7 +43,7 @@ df <- as.data.frame(L_odmature_lisa)
 dfm <- reshape2::melt(df, "r")
 
 get_sel <- dfm %>% filter(r > 200.5630 & r < 201.4388, variable != "theo") %>%
-  mutate(sel = value) %>% select(variable, sel)
+  mutate(sel = value) %>% dplyr::select(variable, sel)
 
 dfm <- dfm %>% left_join(get_sel)
 
@@ -71,7 +71,7 @@ df_fdob <- asinh(df %>% as.matrix / 50) %>% as.data.frame()
 
 # extract the functional response matrix
 mat <- df_fdob %>%
-  select(!c(r,theo))
+  dplyr::select(!c(r,theo))
 # create a dataframe as required by pffr
 dat <- data.frame(ID = colnames(mat))
 dat$Y <- t(mat)
@@ -99,8 +99,8 @@ res <- subset(res, sample_id %in% c('-0.09', '0.01', '0.21'))
 
 #assemble plots for paper
 p_L <- plotMetricPerFov(res, theo = TRUE, correction = "iso", x = "r", imageId = 'sample_id') + theme(legend.position = 'right') + labs(colour="Slice")
-p_local <- wrap_plots(list(p,p_biplot), nrow = 2, guides = 'collect')
-L_plot <- wrap_plots(list(p_L, p_local), nrow = 2, heights = c(1, 2))
+p_local <- patchwork::wrap_plots(list(p,p_biplot), nrow = 2, guides = 'collect')
+L_plot <- patchwork::wrap_plots(list(p_L, p_local), nrow = 2, heights = c(1, 2))
 
 
 pls <- lapply(zstack_list, function(zstack){
@@ -173,3 +173,4 @@ p_scaled <- wrap_plots(p_ls_scaled)
 p <- wrap_plots(list(p_homo, p_inhomo, p_scaled), nrow = 3, guides = 'collect') + plot_annotation(tag_levels = 'A', theme = theme(plot.title = element_text(size = 14)))
 
 ggsave('outs/pp_function_comparison.pdf', plot = p, width = 10, height = 8)
+
