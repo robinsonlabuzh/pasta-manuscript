@@ -9,6 +9,10 @@ R packages are managed with `renv`. To install R packages you can use `renv::res
 - `spatialFDA` has to be installed via `devtools::install_github("mjemons/spatialFDA")`.
 - `sosta` has to be installed via `devtools::install_github("sgunz/sosta")`.
 
+## Data
+
+We use public datasets for all plots. The `STARmap` dataset used in figure 1 can be downloaded from the [singe cell portal](https://singlecell.broadinstitute.org/single_cell/study/SCP1830/spatial-atlas-of-molecular-cell-types-and-aav-accessibility-across-the-whole-mouse-brain) as specified in the [Bansky vignette](https://www.bioconductor.org/packages/release/bioc/vignettes/Banksy/inst/doc/domain-segment.html). All other datasets are downloaded when running `code/utils.R`.
+
 ## R Session Info
 ```
 R version 4.4.1 (2024-06-14)
