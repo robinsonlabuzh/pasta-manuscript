@@ -6,7 +6,6 @@ library(dplyr)
 library(patchwork)
 library(sf)
 
-
 # source: http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette
 cbPalette <- c("#56B4E9", "#F0E442","#CC79A7", "#E69F00", "#009E73", "#0072B2", "#D55E00", "#999999")
 
@@ -16,10 +15,10 @@ spe
 islet <- reconstructShapeDensityImage(
   spe,
   marks = "cell_category",
-  image_col = "image_name",
-  image_id = "E25",
-  mark_select = "islet"
-) 
+  imageCol = "image_name",
+  imageId = "E25",
+  markSelect = "islet"
+)
 
 spe_sel <- spe[, spe[["image_name"]] %in% c("E25")]
 spe_sel_df <- cbind(spatialCoords(spe_sel), colData(spe_sel)) |> as.data.frame()
@@ -41,7 +40,7 @@ p_eq <- ggplot() +
 
 
 st_fov <- st_bbox(c(xmin = min(spe_sel_df$cell_x),
-                    xmax = max(spe_sel_df$cell_x), 
+                    xmax = max(spe_sel_df$cell_x),
                     ymin = min(spe_sel_df$cell_y),
                     ymax = max(spe_sel_df$cell_y))) |> st_as_sfc()
 
@@ -99,7 +98,7 @@ plot(Kest(pp_sub))
 metric_res1 <- calcMetricPerFov(spe_sub, c("islet"),
                                subsetby = "image_number",
                                fun = "Kest", marks = "cell_category",
-                               rSeq = seq(0, 120, length.out = 100), 
+                               rSeq = seq(0, 120, length.out = 100),
                                by = c("patient_stage", "patient_id", "image_number"),
                                ncores = 1
 )
@@ -107,7 +106,9 @@ metric_res1 <- calcMetricPerFov(spe_sub, c("islet"),
 p1.1 <- plotMetricPerFov(metric_res1,
                          correction = "iso", x = "r",
                          imageId = "image_number",
-                         theo = TRUE) + scale_color_manual(values = "#D55E00") 
+                         theo = TRUE) + scale_color_manual(values = "#D55E00") +
+    theme_classic() + guides(color="none") +
+    labs(title = "homogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
 
 p1.1[["layers"]][[2]]$aes_params$linewidth <- 1
 p1.1[["layers"]][[1]]$aes_params$linewidth <- 1
@@ -117,21 +118,15 @@ p1.1
 p1.2 <- plotMetricPerFov(metric_res1,
                          correction = "border", x = "r",
                          imageId = "image_number",
-                         theo = TRUE)  + scale_color_manual(values = "#D55E00")
+                         theo = TRUE)  + scale_color_manual(values = "#D55E00") +
+    theme_classic() + guides(color="none") +
+    labs(title = "homogeneous K-fuction", x = "radius (µm)")
 
 p1.2[["layers"]][[2]]$aes_params$linewidth <- 1
 p1.2[["layers"]][[1]]$aes_params$linewidth <- 1
 
 
 p1.1 + p1.2
-
-p <- ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width)) +
-  geom_line(color = "blue")
-
-p
-
-p + geom_line(linewidth = 2)
-
 
 # Option 2: Inhomogeneous global
 # density on all cells
@@ -151,23 +146,32 @@ metric_res2 <- calcMetricPerFov(spe_sub, "islet",
                                 ncores = 1
 )
 
-### 
+###
 
-p2.1 <- plotMetricPerFov(metric_res2, correction = "iso", 
+p2.1 <- plotMetricPerFov(metric_res2, correction = "iso",
                           x = "r", imageId = "image_number",
-                          theo = TRUE) + scale_color_manual(values = "#D55E00")
-p2.2 <- plotMetricPerFov(metric_res2, correction = "trans", 
+                          theo = TRUE) + scale_color_manual(values = "#D55E00") +
+    theme_classic() + guides(color="none") +
+    labs(title = "inhomogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
+
+p2.2 <- plotMetricPerFov(metric_res2, correction = "trans",
                        x = "r", imageId = "image_number",
-                       theo = TRUE) + scale_color_manual(values = "#D55E00")
-p2.3 <- plotMetricPerFov(metric_res2, correction = "border", 
+                       theo = TRUE) + scale_color_manual(values = "#D55E00") +
+    theme_classic() + guides(color="none") +
+    labs(title = "inhomogeneous K-fuction", x = "radius (µm)")
+p2.3 <- plotMetricPerFov(metric_res2, correction = "border",
                          x = "r", imageId = "image_number",
-                         theo = TRUE) + scale_color_manual(values = "#D55E00")
-p2.4 <- plotMetricPerFov(metric_res2, correction = "bord.modif", 
+                         theo = TRUE) + scale_color_manual(values = "#D55E00") +
+    theme_classic() + guides(color="none") +
+    labs(title = "inhomogeneous K-fuction", x = "radius (µm)")
+p2.4 <- plotMetricPerFov(metric_res2, correction = "bord.modif",
                          x = "r", imageId = "image_number",
-                         theo = TRUE) + scale_color_manual(values = "#D55E00")
+                         theo = TRUE) + scale_color_manual(values = "#D55E00") +
+    theme_classic() + guides(color="none") +
+    labs(title = "inhomogeneous K-fuction", x = "radius (µm)")
 
 
-## 
+##
 
 p2.1[["layers"]][[2]]$aes_params$linewidth <- 1
 p2.1[["layers"]][[1]]$aes_params$linewidth <- 1
@@ -227,22 +231,37 @@ metric_res4 <- calcMetricPerFov(spe_sub, "islet",
 
 
 
-p3.1 <- plotMetricPerFov(metric_res3, correction = "iso", 
+p3.1 <- plotMetricPerFov(metric_res3, correction = "iso",
                  x = "r", imageId = "image_number",
-                 theo = TRUE) + scale_color_manual(values = "#0072B2")
+                 theo = TRUE) + scale_color_manual(values = "#0072B2") +
+    theme_classic() + guides(color="none") +
+    labs(title = "homogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
 
-p4.1 <- plotMetricPerFov(metric_res4, correction = "iso", 
+
+p4.1 <- plotMetricPerFov(metric_res4, correction = "iso",
                          x = "r", imageId = "image_number",
-                         theo = TRUE) + scale_color_manual(values = "#0072B2")
-p4.2 <- plotMetricPerFov(metric_res4, correction = "trans", 
+                         theo = TRUE) + scale_color_manual(values = "#0072B2") +
+    theme_classic() + guides(color="none") +
+    labs(title = "inhomogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
+
+p4.2 <- plotMetricPerFov(metric_res4, correction = "trans",
                          x = "r", imageId = "image_number",
-                         theo = TRUE) + scale_color_manual(values = "#0072B2")
-p4.3 <- plotMetricPerFov(metric_res4, correction = "border", 
+                         theo = TRUE) + scale_color_manual(values = "#0072B2") +
+    theme_classic() + guides(color="none") +
+    labs(title = "inhomogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
+
+p4.3 <- plotMetricPerFov(metric_res4, correction = "border",
                          x = "r", imageId = "image_number",
-                         theo = TRUE) + scale_color_manual(values = "#0072B2")
-p4.4 <- plotMetricPerFov(metric_res4, correction = "bord.modif", 
+                         theo = TRUE) + scale_color_manual(values = "#0072B2") +
+    theme_classic() + guides(color="none") +
+    labs(title = "inhomogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
+
+p4.4 <- plotMetricPerFov(metric_res4, correction = "bord.modif",
                          x = "r", imageId = "image_number",
-                         theo = TRUE) + scale_color_manual(values = "#0072B2")
+                         theo = TRUE) + scale_color_manual(values = "#0072B2") +
+    theme_classic() + guides(color="none") +
+    labs(title = "inhomogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
+
 
 p3.1[["layers"]][[2]]$aes_params$linewidth <- 1
 p3.1[["layers"]][[1]]$aes_params$linewidth <- 1
@@ -271,7 +290,7 @@ p4_tot_v1 <- p4_top / p4_bot
 p4_tot_v1
 
 
-layout <- 
+layout <-
 "
 ABC
 "
@@ -295,4 +314,4 @@ p4_supp <- (p_cell_cat + (p2.1+p2.2)/(p2.3+p2.4)) /
 
 p4_supp
 ggsave("outs/fig4-supp.pdf", p4_supp, width = 12, height = 10)
-  
+
