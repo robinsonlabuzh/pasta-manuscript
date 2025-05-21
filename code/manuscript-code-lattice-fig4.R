@@ -108,7 +108,7 @@ p1.1 <- plotMetricPerFov(metric_res1,
                          imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#D55E00") +
     theme_classic() + guides(color="none") +
-    labs(title = "homogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
+    labs(title = "homogeneous K-function", x = "radius (µm)", y = "isotropic correction")
 
 p1.1[["layers"]][[2]]$aes_params$linewidth <- 1
 p1.1[["layers"]][[1]]$aes_params$linewidth <- 1
@@ -120,7 +120,7 @@ p1.2 <- plotMetricPerFov(metric_res1,
                          imageId = "image_number",
                          theo = TRUE)  + scale_color_manual(values = "#D55E00") +
     theme_classic() + guides(color="none") +
-    labs(title = "homogeneous K-fuction", x = "radius (µm)")
+    labs(title = "homogeneous K-function", x = "radius (µm)")
 
 p1.2[["layers"]][[2]]$aes_params$linewidth <- 1
 p1.2[["layers"]][[1]]$aes_params$linewidth <- 1
@@ -152,23 +152,23 @@ p2.1 <- plotMetricPerFov(metric_res2, correction = "iso",
                           x = "r", imageId = "image_number",
                           theo = TRUE) + scale_color_manual(values = "#D55E00") +
     theme_classic() + guides(color="none") +
-    labs(title = "inhomogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
+    labs(title = "inhomogeneous K-function", x = "radius (µm)", y = "isotropic correction")
 
 p2.2 <- plotMetricPerFov(metric_res2, correction = "trans",
                        x = "r", imageId = "image_number",
                        theo = TRUE) + scale_color_manual(values = "#D55E00") +
     theme_classic() + guides(color="none") +
-    labs(title = "inhomogeneous K-fuction", x = "radius (µm)")
+    labs(title = "inhomogeneous K-function", x = "radius (µm)")
 p2.3 <- plotMetricPerFov(metric_res2, correction = "border",
                          x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#D55E00") +
     theme_classic() + guides(color="none") +
-    labs(title = "inhomogeneous K-fuction", x = "radius (µm)")
+    labs(title = "inhomogeneous K-function", x = "radius (µm)")
 p2.4 <- plotMetricPerFov(metric_res2, correction = "bord.modif",
                          x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#D55E00") +
     theme_classic() + guides(color="none") +
-    labs(title = "inhomogeneous K-fuction", x = "radius (µm)")
+    labs(title = "inhomogeneous K-function", x = "radius (µm)")
 
 
 ##
@@ -235,32 +235,32 @@ p3.1 <- plotMetricPerFov(metric_res3, correction = "iso",
                  x = "r", imageId = "image_number",
                  theo = TRUE) + scale_color_manual(values = "#0072B2") +
     theme_classic() + guides(color="none") +
-    labs(title = "homogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
+    labs(title = "homogeneous K-function", x = "radius (µm)", y = "isotropic correction")
 
 
 p4.1 <- plotMetricPerFov(metric_res4, correction = "iso",
                          x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#0072B2") +
     theme_classic() + guides(color="none") +
-    labs(title = "inhomogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
+    labs(title = "inhomogeneous K-function", x = "radius (µm)", y = "isotropic correction")
 
 p4.2 <- plotMetricPerFov(metric_res4, correction = "trans",
                          x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#0072B2") +
     theme_classic() + guides(color="none") +
-    labs(title = "inhomogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
+    labs(title = "inhomogeneous K-function", x = "radius (µm)", y = "isotropic correction")
 
 p4.3 <- plotMetricPerFov(metric_res4, correction = "border",
                          x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#0072B2") +
     theme_classic() + guides(color="none") +
-    labs(title = "inhomogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
+    labs(title = "inhomogeneous K-function", x = "radius (µm)", y = "isotropic correction")
 
 p4.4 <- plotMetricPerFov(metric_res4, correction = "bord.modif",
                          x = "r", imageId = "image_number",
                          theo = TRUE) + scale_color_manual(values = "#0072B2") +
     theme_classic() + guides(color="none") +
-    labs(title = "inhomogeneous K-fuction", x = "radius (µm)", y = "isotropic correction")
+    labs(title = "inhomogeneous K-function", x = "radius (µm)", y = "isotropic correction")
 
 
 p3.1[["layers"]][[2]]$aes_params$linewidth <- 1
