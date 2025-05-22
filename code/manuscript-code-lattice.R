@@ -267,6 +267,9 @@ pDist <- pDist + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845",
   labs(title = "Local Moran's I\n(Neighbours in 1000 pixel distance)", fill = "locI(KRT17)") +
   theme_classic()
 
+pDetected <- rasterize(pDetected, layers='Point', dpi=150)
+pLocEff_direct <- rasterize(pLocEff_direct, layers='Point', dpi=150)
+pLocEff_pValp0 <- rasterize(pLocEff_pVal, layers='Point', dpi=150)
 
 fig2 <- pDetected + pLocEff_direct + pLocEff_pVal + pPoly + pKnn + pDist +
   plot_layout(nrow = 2, ncol = 3) +
@@ -278,7 +281,7 @@ fig2 <- pDetected + pLocEff_direct + pLocEff_pVal + pPoly + pKnn + pDist +
 
 fig2
 
-ggsave("outs/localMoranOverview.pdf", fig2, width = 8, height = 8)
+ggsave("outs/localMoranOverview.pdf", fig2, width = 8, height = 8, dpi = 300)
 
 
 ### Supplementary Figure Lattice part
@@ -377,5 +380,5 @@ psupp <- (pGeneLoc + pLocPval + pknncont + pDistcont) /  logExpHist +
 #plot
 psupp
 
-ggsave("outs/localMoranOverviewSupp.pdf", psupp, width = 8, height = 8)
+ggsave("outs/localMoranOverviewSupp.png", psupp, width = 8, height = 8, dpi = 300)
 

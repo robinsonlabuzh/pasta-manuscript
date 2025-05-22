@@ -165,20 +165,28 @@ pAll <- pAll + plot_annotation(tag_levels = 'A')
 
 #pAll
 
-ggsave(plot =pAll, "outs/fig2.png", width = 10, height = 10)
+ggsave(plot =pAll, "outs/fig2.png", width = 10, height = 10, dpi = 150)
 
 
 #save triple positive result - multivar Geary's C
-p_ERBB2ESR1PGR <- p4[[1]] + theme(legend.title = element_blank())
+p_ERBB2ESR1PGR <- p4[[1]] + theme(legend.title = element_blank()) +
+  scale_color_gradientn(colours = brewer.piyg(100), guide = "colourbar") +
+  ggtitle('Spatial Correlation ERBB2, ESR1, PGR') +
+  geom_density_2d()
 ggsave(plot = p_ERBB2ESR1PGR, "outs/fig3+.pdf", width = 5, height = 5)
 
 
 #save double positive result - bivar Lee's L
-p_ERBB2ESR1 <- p1  + scale_color_gradientn(colours = ocean.balance(100), guide = "colourbar") +
-  theme(legend.title = element_blank())
+p_ERBB2ESR1 <- p1  + 
+  scale_color_gradientn(colours = brewer.rdbu(100), guide = "colourbar") +
+  theme(legend.title = element_blank())+
+  ggtitle('Spatial Correlation ERBB2, ESR1')
 ggsave(plot =p_ERBB2ESR1, "outs/fig2+.pdf", width = 5, height = 5)
 
 #save single positive result - local Moran's I
-p_ERBB2 <- p[[1]]  + scale_color_gradientn(colours = brewer.spectral(100), guide = "colourbar") +
-  theme(legend.title = element_blank())
+p_ERBB2 <- p[[1]]  + 
+  scale_color_gradientn(colours = brewer.puor(100), guide = "colourbar") +
+  #scale_color_gradientn(colours = brewer.spectral(100), guide = "colourbar") +
+  theme(legend.title = element_blank())+
+  ggtitle('Spatial Correlation ERBB2')
 ggsave(plot =p_ERBB2, "outs/fig1+.pdf", width = 5, height = 5)

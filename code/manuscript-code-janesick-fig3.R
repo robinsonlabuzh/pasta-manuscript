@@ -123,7 +123,7 @@ resCross <- calcCrossMetricPerFov(
   subsetby = 'sample_id',
   fun = 'Lcross.inhom',
   marks = 'Cluster',
-  rSeq = seq(0, 1000, length.out = 500),
+  rSeq = seq(0, 500, length.out = 500),
   by = c("sample_id"),
   correction = 'iso',
   lambdaI = dens_image,
@@ -233,8 +233,6 @@ p1 <- ggplot(resCross, aes(
   ggh4x::facet_wrap2(~elem1, strip = strip,) +
   guides(color=guide_legend(override.aes=list(size=2)))
 
-p0 <- rasterize(p0, layers='Point', dpi=300)
-
 p0 <- p0 + geom_sf(
   data = regions,
   fill = NA,
@@ -243,9 +241,11 @@ p0 <- p0 + geom_sf(
   linewidth = 0.8
 )
 
+p0 <- rasterize(p0, layers='Point', dpi=200)
+
 pAll <- p0/p1
 pAll <- pAll + plot_annotation(tag_levels = 'A') +
   plot_layout(heights = c(3, 1))
 
 pAll
-ggsave(plot =pAll, "outs/fig3.pdf", width = 10, height = 10, dpi = 300)
+ggsave(plot =pAll, "outs/fig3.pdf", width = 10, height = 10, dpi = 100)

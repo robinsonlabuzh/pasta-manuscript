@@ -305,7 +305,7 @@ p4_tot <- p4_tot + plot_annotation(tag_levels = "A")
 
 p4_tot
 
-ggsave("outs/fig4.pdf", p4_tot, width = 10, height = 7)
+ggsave("outs/fig4.pdf", p4_tot, width = 10, height = 7, dpi = 300)
 
 
 # Supplementary
@@ -313,5 +313,5 @@ p4_supp <- (p_cell_cat + (p2.1+p2.2)/(p2.3+p2.4)) /
   (p_cell_islet + (p4.1 + p4.2) / (p4.3 + p4.4)) + plot_annotation(tag_levels = "A")
 
 p4_supp
-ggsave("outs/fig4-supp.pdf", p4_supp, width = 12, height = 10)
+ggsave("outs/fig4-supp.pdf", p4_supp, width = 12, height = 10, dpi = 300)
 
