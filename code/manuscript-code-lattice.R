@@ -9,6 +9,7 @@ library(patchwork)
 library(dplyr)
 library(tidyr)
 library(scales)
+library(ggrastr)
 
 source("code/utils.R")
 
@@ -93,12 +94,19 @@ moran.test(spsf[["Nrgn"]], listw = direct_neigbours)
 loc <- localmoran(spsf[["Nrgn"]], listw = direct_neigbours)
 # extract the effect size
 locEffect <- loc[, 1]
+# extract the Moran's scatter plot clusters based on the mean categorisation
+locClusters <- attr(loc,"quadr")["mean"]
 # extract the p-value and adjust for multiple testing
 p.val.adj <- loc[, 5] |> p.adjust("BH")
 
 spsf$locEffect <- locEffect
 spsf$p.val.adj <- p.val.adj
+spsf$locClusters <- factor(locClusters$mean,
+                           levels = c("High-High", "High-Low", "Low-High", 
+                                      "Low-Low", "Non-significant"))
 
+# setting cluster to "Non-significant" if adj. p-value >=0.05
+spsf$locClusters[spsf$p.val.adj>=0.05] <- "Non-significant"
 # Point to circles for fill
 
 spsf <- st_buffer(spsf, 50)
@@ -120,6 +128,13 @@ pLocEff_direct <- ggplot() +
   scale_fill_gradientn(colours = c("blue","white","red"),
                         values = scales::rescale(c(-1.1,0,4.6)),
                         guide = "colorbar", limits = c(-1.1,4.6))
+
+# Local Moran's Cluster values
+pCluster_direct <- ggplot() +
+  geom_sf(data = spsf, aes(fill = locClusters), size = 0.7, lwd = 0.01) +
+  labs(color = "mean", title = "Local Moran's I Cluster \n(Scatter Plot)") +
+  scale_fill_manual(values = c("orange", "cornflowerblue", "darkgreen", "grey")) +
+  theme_void()
 
 # Local Moran's p-alues
 pLocEff_pVal <- ggplot() +
@@ -271,7 +286,7 @@ pDetected <- rasterize(pDetected, layers='Point', dpi=150)
 pLocEff_direct <- rasterize(pLocEff_direct, layers='Point', dpi=150)
 pLocEff_pValp0 <- rasterize(pLocEff_pVal, layers='Point', dpi=150)
 
-fig2 <- pDetected + pLocEff_direct + pLocEff_pVal + pPoly + pKnn + pDist +
+fig2 <- pDetected + pLocEff_direct  + pCluster_direct + pPoly + pKnn + pDist +
   plot_layout(nrow = 2, ncol = 3) +
   plot_annotation(tag_levels = "A") &
   theme(
@@ -281,7 +296,7 @@ fig2 <- pDetected + pLocEff_direct + pLocEff_pVal + pPoly + pKnn + pDist +
 
 fig2
 
-ggsave("outs/localMoranOverview.pdf", fig2, width = 8, height = 8, dpi = 300)
+ggsave("outs/localMoranOverview.pdf", fig2, width = 8, height = 5, dpi = 300)
 
 
 ### Supplementary Figure Lattice part
