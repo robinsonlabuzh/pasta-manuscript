@@ -6,9 +6,6 @@ https://doi.org/10.48550/arXiv.2412.01561).
 ## Installing necessary R packages
 R packages are managed with `renv`. To install R packages you can use `renv::restore()`.
 
-- `spatialFDA` has to be installed via `devtools::install_github("mjemons/spatialFDA")`.
-- `sosta` has to be installed via `devtools::install_github("sgunz/sosta")`.
-
 ## R Session Info
 ```
 R version 4.4.1 (2024-06-14)
