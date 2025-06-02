@@ -1,10 +1,8 @@
 library(dplyr)
-library(scran)
 library(spdep)
 library(tidyr)
 library(ggplot2)
 library(Voyager)
-library(SFEData)
 library(spatstat)
 library(openxlsx)
 library(spatialFDA)
@@ -62,7 +60,7 @@ receptorGenes <- c("ERBB2", "ESR1", "PGR")
 
 ### single positive analysis ###
 
-p0 <- plotSpatialFeature(sfe, receptorGenes, ncol = 3,
+p0 <- plotSpatialFeature(sfe, receptorGenes, ncol = 1,
                          size = 1E-5, alpha = 0.75, scattermore = FALSE)
 
 sfe <- runUnivariate(sfe,
@@ -71,7 +69,12 @@ sfe <- runUnivariate(sfe,
                      colGraphName = "knn6"
 )
 
-p <- plotLocalResult(sfe,
+#change levels
+localResult(sfe, feature = receptorGenes)$mean <-
+  factor(localResult(sfe, feature = receptorGenes)$mean, 
+         level = c( "High-High", "Low-Low" ,  "High-Low",  "Low-High"))
+
+pUnivar <- plotLocalResult(sfe,
                      name = "localmoran_perm",
                      features = receptorGenes,
                      attribute = "mean",
@@ -79,10 +82,13 @@ p <- plotLocalResult(sfe,
                      divergent = TRUE,
                      diverge_center = 0,
                      size = 0.001,
-                     ncol = 3,
+                     ncol = 1,
                      alpha = 0.75,
-                     scattermore = FALSE) +
-  guides(color = guide_legend(override.aes = list(size = 3)))
+                     scattermore = FALSE) 
+
+pUnivar[[1]]  <- pUnivar[[1]] + guides(color = guide_legend(override.aes = list(size = 3)))
+pUnivar[[2]]  <- pUnivar[[2]] + guides(color = guide_legend(override.aes = list(size = 3)))
+pUnivar[[3]]  <- pUnivar[[3]] + guides(color = guide_legend(override.aes = list(size = 3)))
 
 ### double positive analysis ###
 
@@ -141,7 +147,7 @@ p1 <- p1 + geom_point(size = 1E-5)
 p2 <- p2 + geom_point(size = 1E-5)
 p3 <- p3 + geom_point(size = 1E-5)
 
-pLee <- wrap_plots(list(p1,p2,p3))
+pBivar <- wrap_plots(list(p1,p2,p3), nrow = 3)
 
 
 ### triple positive analysis ###
@@ -173,12 +179,12 @@ reducedDim(sfe, "localC_perm_multi") <- reducedDim(sfe, "localC_perm_multi") %>%
 ### end ###
 
 # stored as spatially reduced dim; plot it in this way
-p4 <- spatialReducedDim(sfe, "localC_perm_multi", c(1, 11, 12),
+pMultivar <- spatialReducedDim(sfe, "localC_perm_multi", c(1, 11, 12),
                         size = 0.001, alpha = 0.75, scattermore = FALSE, divergent = TRUE,
-                        diverge_center = 0)
-p4 <- p4 + geom_point(size = 1E-5) + guides(color = guide_legend(override.aes = list(size = 3)))
+                        diverge_center = 0, ncol = 1)
+pMultivar <- pMultivar + geom_point(size = 1E-5) + guides(color = guide_legend(override.aes = list(size = 3)))
 
-p4
+pMultivar
 
 pDens <- cbind(reducedDim(sfe, "localC_perm_multi"), spatialCoords(sfe)) |>
   filter(manual_cluster == "Positive") |>
@@ -189,43 +195,20 @@ pDens <- cbind(reducedDim(sfe, "localC_perm_multi"), spatialCoords(sfe)) |>
   labs(title = "Density of positive & significant points") +
   coord_equal()
 
-p4[[3]] + scale_color_manual(values = c("blue","red", "grey")) + 
+pMultivar[[3]] + scale_color_manual(values = c("blue","red", "grey")) + 
   guides(color = guide_legend(override.aes = list(size = 3))) +
   pDens
 
-pAll <- p0/p/pLee /p4
-pAll <- pAll + plot_annotation(tag_levels = 'A')
+pAlla <- p0|pUnivar
+pAlla <- pAlla +  plot_annotation(tag_levels = 'A')
 
-#pAll
+pAllb <- pBivar|pMultivar
+pAllb <- pAllb +  plot_annotation(tag_levels = 'A')
 
-ggsave(plot =pAll, "outs/fig2.png", width = 10, height = 10, dpi = 150)
+ggsave(plot =pAlla, "outs/fig2a.png", width = 10, height = 10, dpi = 200)
+ggsave(plot =pAllb, "outs/fig2b.png", width = 10, height = 10, dpi = 200)
 
 
-# #save triple positive result - multivar Geary's C
-# p_ERBB2ESR1PGR <- p4[[1]] + theme(legend.title = element_blank()) +
-#   scale_color_gradientn(colours = brewer.piyg(100), guide = "colourbar") +
-#   ggtitle(paste0('Spatial Correlation *ERBB2*, *ESR1*, *PGR*')) +
-#   theme(plot.title = ggtext::element_markdown()) +
-#   geom_density_2d()
-# ggsave(plot = p_ERBB2ESR1PGR, "outs/fig3+.pdf", width = 5, height = 5)
-# 
-# 
-# #save double positive result - bivar Lee's L
-# p_ERBB2ESR1 <- p1  + 
-#   scale_color_gradientn(colours = brewer.rdbu(100), guide = "colourbar") +
-#   theme(legend.title = element_blank())+
-#   ggtitle('Spatial Correlation *ERBB2*, *ESR1*') +
-#   theme(plot.title = ggtext::element_markdown())
-# ggsave(plot =p_ERBB2ESR1, "outs/fig2+.pdf", width = 5, height = 5)
-# 
-# #save single positive result - local Geary's C
-# p_ERBB2 <- p[[1]]  + 
-#   scale_color_gradientn(colours = brewer.puor(100), guide = "colourbar") +
-#   #scale_color_gradientn(colours = brewer.spectral(100), guide = "colourbar") +
-#   theme(legend.title = element_blank())+
-#   ggtitle('Spatial Correlation *ERBB2*') +
-#   theme(plot.title = ggtext::element_markdown())
-# ggsave(plot =p_ERBB2, "outs/fig1+.pdf", width = 5, height = 5)
 
 ### consensus analysis on the single positive Geary's C regions ###
 
@@ -247,9 +230,12 @@ df <- df %>%
     mean == "High-High" ~ "ERBB2+",
     mean.1 == "High-High" ~ "ESR1+",
     mean.2 == "High-High" ~ "PGR+",
+    X.log10p_adj.Sim < -log(0.05) ~ "Non-significant",
+    X.log10p_adj.Sim.1 < -log(0.05) ~ "Non-significant",
+    X.log10p_adj.Sim.2 < -log(0.05) ~ "Non-significant",
     .default = "Not applicable",
   ), levels = c("ERBB2+/ESR1+/PGR+", "ERBB2+/ESR1+", "ERBB2+/PGR+", "ESR1+/PGR+",
-                "ERBB2+", "ESR1+", "PGR+", "Not applicable")
+                "ERBB2+", "ESR1+", "PGR+", "Non-significant", "Not applicable")
   ))
 
 df <- df %>% cbind(xy)

@@ -1,10 +1,8 @@
 suppressPackageStartupMessages({library(dplyr)
-library(scran)
 library(spdep)
 library(tidyr)
 library(ggplot2)
 library(Voyager)
-library(SFEData)
 library(spatstat)
 library(openxlsx)
 library(spatialFDA)
@@ -28,10 +26,6 @@ matchedDf <- as.data.frame(colData(sfe)) |>
   left_join(as.data.frame(labels), by = join_by("cell_id"))
 
 colData(sfe) <- DataFrame(matchedDf)
-
-sfe <- sfe[, colSums(counts(sfe)) > 0]
-sfe <- sfe[, !is.na(sfe$Cluster)]
-sfe <- logNormCounts(sfe)
 
 xy <- spatialCoords(sfe)
 
