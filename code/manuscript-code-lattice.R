@@ -10,6 +10,9 @@ library(dplyr)
 library(tidyr)
 library(scales)
 library(ggrastr)
+library(SFEData)
+library(stringr)
+library(Voyager)
 
 spe <- Visium_mouseCoronal()
 rownames(spe) <- rowData(spe)$gene_name
@@ -184,21 +187,31 @@ pLocPval <- spsf |>
 psupploc <- pGeneLoc + pLocPval
 
 # Moran scatter plot
-
+# code from ?moran.plot
 mp <- moran.plot(spsf[["Nrgn"]], listw = direct_neigbours)
-
 xname <- attr(mp, "xname")
-ggplot(mp, aes(x=x, y=wx)) +
-    ggrastr::rasterise(geom_point(colour = "black", size = 0.5), dpi = setDpi) +
+
+mp <- cbind(mp, spsf)
+
+mp <- mp |>
+    mutate(significant = ifelse(locClusters == "Non-significant",
+                                "Non-significant", "Significant"))
+ggplot(mp, aes(x=x, y=wx, color = significant)) +
+    ggrastr::rasterise(geom_point(size = 0.5), dpi = setDpi) +
+    scale_color_manual(values = c("gray55", "black")) +
     geom_smooth(formula=y ~ x, method="lm", color = "darkgreen") +
     geom_hline(yintercept=mean(mp$wx), lty=2) +
     geom_vline(xintercept=mean(mp$x), lty=2) + theme_minimal() +
     #geom_point(data=mp[mp$is_inf,], aes(x=x, y=wx), shape=9) +
     #geom_text(data=mp[mp$is_inf,], aes(x=x, y=wx, label=labels, vjust=1.5)) +
-    labs(x = "Expression of *Nrgn* ", y = "Spatially lagged<br>expression of *Nrgn*") +
+    labs(x = "Expression of *Nrgn* ",
+         y = "Spatially lagged<br>expression of *Nrgn*",
+         color = "Significance\n(Local Moran's I)") +
     geom_density2d(color = "cornflowerblue") +
+    guides(color = guide_legend(override.aes = list(size = 3))) +
     theme(axis.title = ggtext::element_markdown()) -> moranSc
 
+moranSc
 
 ## Plot
 p2 <- pDetected + pLocEff_direct + pLocEff_pVal
@@ -330,7 +343,7 @@ fig2 <- pDetected + pLocEff_direct  + pCluster_direct + pPoly + pKnn + pDist +
   )
 
 
-ggsave("outs/localMoranOverview.pdf", fig2, width = 8, height = 5)
+ggsave("outs/localMoranOverview.pdf", fig2, width = 10, height = 7)
 
 
 ### Supplementary Figure Lattice part

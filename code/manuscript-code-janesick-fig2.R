@@ -13,6 +13,31 @@ library(pals)
 library(SpaNorm)
 library(patchwork)
 
+# rasterize options
+setDpi <- 300
+options("ggrastr.default.dpi" = setDpi)
+
+
+
+rastVoyPlot <- function(plot, dpi = 200){
+    plot  <- plot + ggrastr::rasterize(plot[["layers"]], dpi = dpi)
+    plot[["layers"]][[1]] <- NULL
+    return(plot)
+}
+
+
+rastVoyPlotList <- function(plotList, dpi = 200, legend_size = 3) {
+    for (i in seq_along(plotList)) {
+        # Rasterize layers
+        plotList[[i]] <- plotList[[i]] + ggrastr::rasterize(plotList[[i]][["layers"]], dpi = dpi)
+        # Remove original first layer
+        plotList[[i]][["layers"]][[1]] <- NULL
+    }
+    return(plotList)
+}
+
+
+
 spe <- STexampleData::Janesick_breastCancer_Xenium_rep1()
 
 sfe <- toSpatialFeatureExperiment(spe)
@@ -33,6 +58,9 @@ colData(sfe) <- DataFrame(matchedDf)
 
 sfe <- sfe[, colSums(counts(sfe)) > 0]
 sfe <- sfe[, !is.na(sfe$Cluster)]
+
+# normalization
+sfe <- scuttle::logNormCounts(sfe)
 
 # perform a spatially aware normalisation
 sfe <- SpaNorm(sfe, sample.p = 0.01, tol = 1e-03)
@@ -61,7 +89,11 @@ receptorGenes <- c("ERBB2", "ESR1", "PGR")
 ### single positive analysis ###
 
 p0 <- plotSpatialFeature(sfe, receptorGenes, ncol = 1,
-                         size = 1E-5, alpha = 0.75, scattermore = FALSE)
+                         size = 1E-7, alpha = 0.75, scattermore = FALSE)
+
+p0 <- p0 + geom_point(size = 1E-7)
+p0 <- rastVoyPlotList(p0, dpi = 200)
+
 
 sfe <- runUnivariate(sfe,
                      type = "localmoran_perm",
@@ -69,9 +101,10 @@ sfe <- runUnivariate(sfe,
                      colGraphName = "knn6"
 )
 
+
 #change levels
 localResult(sfe, feature = receptorGenes)$mean <-
-  factor(localResult(sfe, feature = receptorGenes)$mean, 
+  factor(localResult(sfe, feature = receptorGenes)$mean,
          level = c( "High-High", "Low-Low" ,  "High-Low",  "Low-High"))
 
 pUnivar <- plotLocalResult(sfe,
@@ -81,14 +114,19 @@ pUnivar <- plotLocalResult(sfe,
                      colGeometryName = "centroids",
                      divergent = TRUE,
                      diverge_center = 0,
-                     size = 0.001,
+                     size = 1E-7,
                      ncol = 1,
                      alpha = 0.75,
-                     scattermore = FALSE) 
+                     scattermore = FALSE)
 
 pUnivar[[1]]  <- pUnivar[[1]] + guides(color = guide_legend(override.aes = list(size = 3)))
 pUnivar[[2]]  <- pUnivar[[2]] + guides(color = guide_legend(override.aes = list(size = 3)))
 pUnivar[[3]]  <- pUnivar[[3]] + guides(color = guide_legend(override.aes = list(size = 3)))
+
+pUnivar <- rastVoyPlotList(pUnivar, dpi = 200)
+
+#ggsave("outs/test.pdf", pUnivar[[3]], width = 8, height = 5)
+
 
 ### double positive analysis ###
 
@@ -112,7 +150,7 @@ p1 <- plotLocalResult(
   colGeometryName = "centroids",
   divergent = TRUE,
   diverge_center = 0,
-  size = 0.001,
+  size = 1E-7,
   alpha = 0.75,
   scattermore = FALSE
 ) + ggtitle(NULL)
@@ -124,7 +162,7 @@ p2 <- plotLocalResult(
   colGeometryName = "centroids",
   divergent = TRUE,
   diverge_center = 0,
-  size = 0.001,
+  size = 1E-7,
   alpha = 0.75,
   scattermore = FALSE
 ) + ggtitle(NULL)
@@ -136,24 +174,25 @@ p3 <- plotLocalResult(
   colGeometryName = "centroids",
   divergent = TRUE,
   diverge_center = 0,
-  size = 0.001,
+  size = 1E-7,
   alpha = 0.75,
   scattermore = FALSE
 ) + ggtitle(NULL)
 
 
-p0 <- p0 + geom_point(size = 1E-5)
-p1 <- p1 + geom_point(size = 1E-5)
-p2 <- p2 + geom_point(size = 1E-5)
-p3 <- p3 + geom_point(size = 1E-5)
+p1 <- rastVoyPlot(p1, 200)
+p2 <- rastVoyPlot(p2, 200)
+p3 <- rastVoyPlot(p3, 200)
+
 
 pBivar <- wrap_plots(list(p1,p2,p3), nrow = 3)
 
+ggsave("outs/test.pdf", pBivar, width = 5, height = 10)
 
 ### triple positive analysis ###
 
 sfe <- runMultivariate(sfe, type = "localC_perm_multi",
-                       nsim = 499, 
+                       nsim = 499,
                        subset_row = receptorGenes,
                        colGraphName = "knn6",
                        exprs_values = "logcounts")
@@ -161,7 +200,7 @@ sfe <- runMultivariate(sfe, type = "localC_perm_multi",
 #create a 4x4 clustering table as in https://mkram01.github.io/EPI563-SpatialEPI/spatial-structure-and-clustering-i-morans-i-and-lisa.html
 #code adapted from the webpage lincensed under CC-BY-NC-SA
 
-reducedDim(sfe, "localC_perm_multi") <- reducedDim(sfe, "localC_perm_multi") %>% 
+reducedDim(sfe, "localC_perm_multi") <- reducedDim(sfe, "localC_perm_multi") %>%
   mutate(
     auto_cluster = factor(case_when(
       cluster == "Positive" & `-log10p_adj Sim` >= -log10(0.05) ~ 'Positive',
@@ -180,24 +219,28 @@ reducedDim(sfe, "localC_perm_multi") <- reducedDim(sfe, "localC_perm_multi") %>%
 
 # stored as spatially reduced dim; plot it in this way
 pMultivar <- spatialReducedDim(sfe, "localC_perm_multi", c(1, 11, 12),
-                        size = 0.001, alpha = 0.75, scattermore = FALSE, divergent = TRUE,
+                        size = 1E-7, alpha = 0.75,
+                        scattermore = FALSE, divergent = TRUE,
                         diverge_center = 0, ncol = 1)
-pMultivar <- pMultivar + geom_point(size = 1E-5) + guides(color = guide_legend(override.aes = list(size = 3)))
+pMultivar <- pMultivar + geom_point(size = 1E-7) + guides(color = guide_legend(override.aes = list(size = 3)))
 
-pMultivar
 
 pDens <- cbind(reducedDim(sfe, "localC_perm_multi"), spatialCoords(sfe)) |>
   filter(manual_cluster == "Positive") |>
   ggplot(aes(x = x_centroid, y = y_centroid)) +
-  geom_point(size = 0.01) +
+  geom_point(size = 1E-7) +
   theme_void() +
   geom_density_2d(alpha = 0.5) +
   labs(title = "Density of positive & significant points") +
   coord_equal()
 
-pMultivar[[3]] + scale_color_manual(values = c("blue","red", "grey")) + 
-  guides(color = guide_legend(override.aes = list(size = 3))) +
-  pDens
+
+pMultivar <- rastVoyPlotList(pMultivar, dpi = 200)
+pDens <- rastVoyPlot(pDens, dpi = 200)
+
+# pMultivar[[3]] + scale_color_manual(values = c("blue","red", "grey")) +
+#   guides(color = guide_legend(override.aes = list(size = 3))) +
+#   pDens
 
 pAlla <- p0|pUnivar
 pAlla <- pAlla +  plot_annotation(tag_levels = 'A')
@@ -205,10 +248,11 @@ pAlla <- pAlla +  plot_annotation(tag_levels = 'A')
 pAllb <- pBivar|pMultivar
 pAllb <- pAllb +  plot_annotation(tag_levels = 'A')
 
-ggsave(plot =pAlla, "outs/fig2a.png", width = 10, height = 10, dpi = 200)
-ggsave(plot =pAllb, "outs/fig2b.png", width = 10, height = 10, dpi = 200)
+ggsave(plot =pAlla, "outs/fig2a.png", width = 10, height = 8, dpi = 200)
+ggsave(plot =pAllb, "outs/fig2b.png", width = 10, height = 8, dpi = 200)
 
-
+ggsave(plot =pAlla, "outs/fig2a.pdf", width = 10, height = 8, dpi = 200)
+ggsave(plot =pAllb, "outs/fig2b.pdf", width = 10, height = 8, dpi = 200)
 
 ### consensus analysis on the single positive Geary's C regions ###
 
@@ -240,18 +284,19 @@ df <- df %>%
 
 df <- df %>% cbind(xy)
 pConsensus <- ggplot(df, aes(x_centroid, y_centroid, color = consensus)) +
-  geom_point(size = 1E-8) +
-  theme_light() + 
-  guides(color = guide_legend(override.aes = list(size = 3), 
+  ggrastr::rasterise(geom_point(size = 1E-7), dpi = 300) +
+  theme_light() +
+  guides(color = guide_legend(override.aes = list(size = 3),
                               theme = theme(
                                 legend.text = element_text(size = 15),
                                 legend.title = element_text(size = 15)))) +
   coord_equal() +
   scale_color_brewer(palette = "Accent") +
   ggtitle("Consensus of Moran's Scatterplot for *ERBB2*, *ESR1*, *PGR*")+
+  labs(col = "", x = "", y = "") +
   theme(plot.title = ggtext::element_markdown(size = 16))
 
-pConsensus <- ggrastr::rasterize(pConsensus, layers='Point', dpi=300)
+#pConsensus <- ggrastr::rasterize(pConsensus, layers='Point', dpi=300)
 
-ggsave(plot = pConsensus, "outs/consensus.pdf", width = 15, height = 10)
+ggsave(plot = pConsensus, "outs/consensus.pdf", width = 12, height = 7)
 
