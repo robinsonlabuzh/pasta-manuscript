@@ -19,15 +19,24 @@ options("ggrastr.default.dpi" = setDpi)
 
 
 
-rastVoyPlot <- function(plot, dpi = 200){
+rastVoyPlot <- function(plot, dpi = 180, stroke = 0.1, size = 0.05){
+    plot[["layers"]][[1]]$aes_params$shape <- 21
+    plot[["layers"]][[1]]$aes_params$stroke <- stroke
+    plot[["layers"]][[1]]$aes_params$size <- size
+
     plot  <- plot + ggrastr::rasterize(plot[["layers"]], dpi = dpi)
     plot[["layers"]][[1]] <- NULL
     return(plot)
 }
 
 
-rastVoyPlotList <- function(plotList, dpi = 200, legend_size = 3) {
+rastVoyPlotList <- function(plotList, dpi = 180, legend_size = 3,
+                            stroke = 0.1, size = 0.05) {
     for (i in seq_along(plotList)) {
+        plotList[[i]][["layers"]][[1]]$aes_params$shape <- 21
+        plotList[[i]][["layers"]][[1]]$aes_params$stroke <- stroke
+        plotList[[i]][["layers"]][[1]]$aes_params$size <- size
+
         # Rasterize layers
         plotList[[i]] <- plotList[[i]] + ggrastr::rasterize(plotList[[i]][["layers"]], dpi = dpi)
         # Remove original first layer
@@ -39,7 +48,6 @@ rastVoyPlotList <- function(plotList, dpi = 200, legend_size = 3) {
 
 
 spe <- STexampleData::Janesick_breastCancer_Xenium_rep1()
-
 sfe <- toSpatialFeatureExperiment(spe)
 
 ### code adapted from https://lmweber.org/OSTA/pages/crs-spat-stat.html ###
@@ -88,11 +96,8 @@ receptorGenes <- c("ERBB2", "ESR1", "PGR")
 
 ### single positive analysis ###
 
-p0 <- plotSpatialFeature(sfe, receptorGenes, ncol = 1,
-                         size = 1E-7, alpha = 0.75, scattermore = FALSE)
-
-p0 <- p0 + geom_point(size = 1E-7)
-p0 <- rastVoyPlotList(p0, dpi = 200)
+p0 <- plotSpatialFeature(sfe, receptorGenes, ncol = 1, alpha = 0.75, scattermore = FALSE)
+p0 <- rastVoyPlotList(p0, dpi = 180)
 
 
 sfe <- runUnivariate(sfe,
@@ -119,14 +124,14 @@ pUnivar <- plotLocalResult(sfe,
                      alpha = 0.75,
                      scattermore = FALSE)
 
-pUnivar[[1]]  <- pUnivar[[1]] + guides(color = guide_legend(override.aes = list(size = 3)))
-pUnivar[[2]]  <- pUnivar[[2]] + guides(color = guide_legend(override.aes = list(size = 3)))
-pUnivar[[3]]  <- pUnivar[[3]] + guides(color = guide_legend(override.aes = list(size = 3)))
+pUnivar[[1]]  <- pUnivar[[1]] +
+    guides(color = guide_legend(override.aes = list(shape = 16, size = 3)))
+pUnivar[[2]]  <- pUnivar[[2]]+
+    guides(color = guide_legend(override.aes = list(shape = 16, size = 3)))
+pUnivar[[3]]  <- pUnivar[[3]] +
+    guides(color = guide_legend(override.aes = list(shape = 16, size = 3)))
 
-pUnivar <- rastVoyPlotList(pUnivar, dpi = 200)
-
-#ggsave("outs/test.pdf", pUnivar[[3]], width = 8, height = 5)
-
+pUnivar <- rastVoyPlotList(pUnivar, dpi = 180)
 
 ### double positive analysis ###
 
@@ -179,15 +184,12 @@ p3 <- plotLocalResult(
   scattermore = FALSE
 ) + ggtitle(NULL)
 
-
 p1 <- rastVoyPlot(p1, 200)
 p2 <- rastVoyPlot(p2, 200)
 p3 <- rastVoyPlot(p3, 200)
 
-
 pBivar <- wrap_plots(list(p1,p2,p3), nrow = 3)
 
-ggsave("outs/test.pdf", pBivar, width = 5, height = 10)
 
 ### triple positive analysis ###
 
@@ -222,8 +224,6 @@ pMultivar <- spatialReducedDim(sfe, "localC_perm_multi", c(1, 11, 12),
                         size = 1E-7, alpha = 0.75,
                         scattermore = FALSE, divergent = TRUE,
                         diverge_center = 0, ncol = 1)
-pMultivar <- pMultivar + geom_point(size = 1E-7) + guides(color = guide_legend(override.aes = list(size = 3)))
-
 
 pDens <- cbind(reducedDim(sfe, "localC_perm_multi"), spatialCoords(sfe)) |>
   filter(manual_cluster == "Positive") |>
@@ -235,8 +235,11 @@ pDens <- cbind(reducedDim(sfe, "localC_perm_multi"), spatialCoords(sfe)) |>
   coord_equal()
 
 
-pMultivar <- rastVoyPlotList(pMultivar, dpi = 200)
-pDens <- rastVoyPlot(pDens, dpi = 200)
+pMultivar <- rastVoyPlotList(pMultivar, dpi = 180)
+pDens <- rastVoyPlot(pDens, dpi = 180)
+
+pMultivar[[3]] <- pMultivar[[3]] +
+    guides(color = guide_legend(override.aes = list(shape = 16, size = 3)))
 
 # pMultivar[[3]] + scale_color_manual(values = c("blue","red", "grey")) +
 #   guides(color = guide_legend(override.aes = list(size = 3))) +
@@ -248,11 +251,11 @@ pAlla <- pAlla +  plot_annotation(tag_levels = 'A')
 pAllb <- pBivar|pMultivar
 pAllb <- pAllb +  plot_annotation(tag_levels = 'A')
 
-ggsave(plot =pAlla, "outs/fig2a.png", width = 10, height = 8, dpi = 200)
-ggsave(plot =pAllb, "outs/fig2b.png", width = 10, height = 8, dpi = 200)
+ggsave(plot =pAlla, "outs/fig2a.png", width = 10, height = 8, dpi = 180)
+ggsave(plot =pAllb, "outs/fig2b.png", width = 10, height = 8, dpi = 180)
 
-ggsave(plot =pAlla, "outs/fig2a.pdf", width = 10, height = 8, dpi = 200)
-ggsave(plot =pAllb, "outs/fig2b.pdf", width = 10, height = 8, dpi = 200)
+ggsave(plot =pAlla, "outs/fig2a.pdf", width = 10, height = 8, dpi = 180)
+ggsave(plot =pAllb, "outs/fig2b.pdf", width = 10, height = 8, dpi = 180)
 
 ### consensus analysis on the single positive Geary's C regions ###
 
@@ -264,27 +267,38 @@ df <- lapply(receptorGenes, function(elem){
 }) %>% as.data.frame() %>%
   cbind()
 
+df <- df %>% cbind(xy)
 
 df <- df %>%
+    mutate(high_signf = ifelse(
+        X.log10p_adj.Sim >= -log10(0.05) & mean == "High-High" |
+            X.log10p.Sim.1 >= -log10(0.05) & mean.1 == "High-High" |
+            X.log10p.Sim.2 >= -log10(0.05) & mean.2 == "High-High", "high-sign",
+        "non-sign")
+    ) |>
   mutate(consensus = factor(case_when(
-    mean == "High-High" & mean.1 == "High-High" & mean.2 == "High-High" ~ "ERBB2+/ESR1+/PGR+",
-    mean == "High-High" & mean.1 == "High-High" ~ "ERBB2+/ESR1+",
-    mean == "High-High" & mean.2 == "High-High" ~ "ERBB2+/PGR+",
-    mean.1 == "High-High" & mean.2 == "High-High" ~ "ESR1+/PGR+",
-    mean == "High-High" ~ "ERBB2+",
-    mean.1 == "High-High" ~ "ESR1+",
-    mean.2 == "High-High" ~ "PGR+",
-    X.log10p_adj.Sim < -log(0.05) ~ "Non-significant",
-    X.log10p_adj.Sim.1 < -log(0.05) ~ "Non-significant",
-    X.log10p_adj.Sim.2 < -log(0.05) ~ "Non-significant",
+    mean == "High-High" & mean.1 == "High-High" & mean.2 == "High-High" &
+        high_signf ==  "high-sign" ~ "ERBB2+/ESR1+/PGR+",
+    mean == "High-High" & mean.1 == "High-High" &
+        high_signf ==  "high-sign" ~ "ERBB2+/ESR1+",
+    mean == "High-High" & mean.2 == "High-High" &
+        high_signf ==  "high-sign" ~ "ERBB2+/PGR+",
+    mean.1 == "High-High" & mean.2 == "High-High" &
+        high_signf ==  "high-sign"~ "ESR1+/PGR+",
+    mean == "High-High"&
+        high_signf ==  "high-sign"  ~ "ERBB2+",
+    mean.1 == "High-High" &
+        high_signf ==  "high-sign" ~ "ESR1+",
+    mean.2 == "High-High"&
+        high_signf ==  "high-sign" ~ "PGR+",
+    high_signf == "non-sign" ~ "Non-significant",
     .default = "Not applicable",
   ), levels = c("ERBB2+/ESR1+/PGR+", "ERBB2+/ESR1+", "ERBB2+/PGR+", "ESR1+/PGR+",
                 "ERBB2+", "ESR1+", "PGR+", "Non-significant", "Not applicable")
   ))
 
-df <- df %>% cbind(xy)
 pConsensus <- ggplot(df, aes(x_centroid, y_centroid, color = consensus)) +
-  ggrastr::rasterise(geom_point(size = 1E-7), dpi = 300) +
+  ggrastr::rasterise(geom_point(size = 0.25, stroke = 0), dpi = 180) +
   theme_light() +
   guides(color = guide_legend(override.aes = list(size = 3),
                               theme = theme(
@@ -295,6 +309,8 @@ pConsensus <- ggplot(df, aes(x_centroid, y_centroid, color = consensus)) +
   ggtitle("Consensus of Moran's Scatterplot for *ERBB2*, *ESR1*, *PGR*")+
   labs(col = "", x = "", y = "") +
   theme(plot.title = ggtext::element_markdown(size = 16))
+
+pConsensus
 
 #pConsensus <- ggrastr::rasterize(pConsensus, layers='Point', dpi=300)
 
