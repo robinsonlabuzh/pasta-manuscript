@@ -67,10 +67,10 @@ colData(sfe) <- DataFrame(matchedDf)
 sfe <- sfe[, colSums(counts(sfe)) > 0]
 sfe <- sfe[, !is.na(sfe$Cluster)]
 
-# normalization
-sfe <- scuttle::logNormCounts(sfe)
+# fast computation of the size factors
+sfe <- SpaNorm::fastSizeFactors(sfe)
 
-# perform a spatially aware normalisation
+# perform a spatially aware normalisation with the scuttle size factors
 sfe <- SpaNorm(sfe, sample.p = 0.01, tol = 1e-03)
 
 xy <- spatialCoords(sfe)
@@ -297,6 +297,10 @@ df <- df %>%
                 "ERBB2+", "ESR1+", "PGR+", "Non-significant", "Not applicable")
   ))
 
+colorMap <- RColorBrewer::brewer.pal(8, "Dark2")
+colorMap[[1]] <- "#00A9FF"
+colorMap[[8]] <- "#D1D3D5"
+
 pConsensus <- ggplot(df, aes(x_centroid, y_centroid, color = consensus)) +
   ggrastr::rasterise(geom_point(size = 0.25, stroke = 0), dpi = 180) +
   theme_light() +
@@ -305,14 +309,16 @@ pConsensus <- ggplot(df, aes(x_centroid, y_centroid, color = consensus)) +
                                 legend.text = element_text(size = 15),
                                 legend.title = element_text(size = 15)))) +
   coord_equal() +
-  scale_color_brewer(palette = "Accent") +
+  scale_color_manual(values = colorMap) +
   ggtitle("Consensus of Moran's Scatterplot for *ERBB2*, *ESR1*, *PGR*")+
   labs(col = "", x = "", y = "") +
-  theme(plot.title = ggtext::element_markdown(size = 16))
+  theme(plot.title = ggtext::element_markdown(size = 16)) +
+  guides(color = guide_legend(override.aes = list(shape = 16, size = 3)))
 
+pConsensus <- rastVoyPlot(pConsensus, dpi = 300)
 pConsensus
 
 #pConsensus <- ggrastr::rasterize(pConsensus, layers='Point', dpi=300)
 
-ggsave(plot = pConsensus, "outs/consensus.pdf", width = 12, height = 7)
+ggsave(plot = pConsensus, "outs/consensus.pdf", width = 10, height = 7)
 
