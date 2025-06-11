@@ -9,11 +9,17 @@ library(patchwork)
 library(dplyr)
 library(tidyr)
 library(scales)
-
-source("code/utils.R")
+library(ggrastr)
+library(SFEData)
+library(stringr)
+library(Voyager)
 
 spe <- Visium_mouseCoronal()
 rownames(spe) <- rowData(spe)$gene_name
+
+setDpi <- 300
+
+options("ggrastr.default.dpi" = setDpi)
 
 ####
 #### Source: https://lmweber.org/BestPracticesST/chapters/workflow-Visium-mouseCoronal.html
@@ -93,27 +99,38 @@ moran.test(spsf[["Nrgn"]], listw = direct_neigbours)
 loc <- localmoran(spsf[["Nrgn"]], listw = direct_neigbours)
 # extract the effect size
 locEffect <- loc[, 1]
+# extract the Moran's scatter plot clusters based on the mean categorisation
+locClusters <- attr(loc,"quadr")["mean"]
 # extract the p-value and adjust for multiple testing
 p.val.adj <- loc[, 5] |> p.adjust("BH")
 
 spsf$locEffect <- locEffect
 spsf$p.val.adj <- p.val.adj
+spsf$locClusters <- factor(locClusters$mean,
+                           levels = c("High-High", "High-Low", "Low-High",
+                                      "Low-Low", "Non-significant"))
 
+# setting cluster to "Non-significant" if adj. p-value >=0.05
+spsf$locClusters[spsf$p.val.adj>=0.05] <- "Non-significant"
 # Point to circles for fill
 
 spsf <- st_buffer(spsf, 50)
 
 # Detected expression
 pDetected <- ggplot() +
-  geom_sf(data = spsf, aes(fill = Nrgn), size = 0.7,  lwd = 0.01) +
+  ggrastr::rasterise(geom_sf(data = spsf, aes(fill = Nrgn), size = 0.7,  lwd = 0.01),
+                     dpi = setDpi)+
   scale_fill_distiller(palette = "BuPu", direction = 1) +
   geom_point(size = 0.7) +
-  labs(color = "Nrgn", title = "Expression of Nrgn\n") +
-  theme_void()
+  labs(color = "*Nrgn*", title = "Expression of *Nrgn*\n") +
+  theme_void() +
+  theme(plot.title = ggtext::element_markdown(),
+        legend.title=element_text(face = "italic"))
 
 # Local Moran's I values
 pLocEff_direct <- ggplot() +
-  geom_sf(data = spsf, aes(fill = locEffect), size = 0.7, lwd = 0.01) +
+  ggrastr::rasterise(geom_sf(data = spsf, aes(fill = locEffect), size = 0.7, lwd = 0.01),
+                             dpi = setDpi) +
   #geom_sf(data = spsf, aes(color = locEffect), size = 0.3) +
   labs(color = "locI(Nrgn)", title = "Local Moran's I\n(Direct neighbours)") +
   theme_void() +
@@ -121,9 +138,18 @@ pLocEff_direct <- ggplot() +
                         values = scales::rescale(c(-1.1,0,4.6)),
                         guide = "colorbar", limits = c(-1.1,4.6))
 
+# Local Moran's Cluster values
+pCluster_direct <- ggplot() +
+  ggrastr::rasterise(geom_sf(data = spsf, aes(fill = locClusters), size = 0.7, lwd = 0.01),
+                     dpi = setDpi) +
+  labs(color = "mean", title = "Local Moran's I Cluster \n(Scatter Plot)") +
+  scale_fill_manual(values = c("orange", "cornflowerblue", "darkgreen", "grey")) +
+  theme_void()
+
 # Local Moran's p-alues
 pLocEff_pVal <- ggplot() +
-  geom_sf(data = spsf, aes(fill = -log10(p.val.adj)), size = 0.7, lwd = 0.01) +
+    ggrastr::rasterise(geom_sf(data = spsf, aes(fill = -log10(p.val.adj)), size = 0.7, lwd = 0.01),
+                       dpi = setDpi) +
   scale_fill_distiller(palette = "BuGn", direction = 1) +
   labs(color = "-log10(adj. p-val.)", title = "Local Moran's I\n(Adjusted significance levels)") +
   theme_void()
@@ -131,30 +157,61 @@ pLocEff_pVal <- ggplot() +
 
 spsf |>
   ggplot(aes(x = Nrgn, y = locEffect, fill = -log10(p.val.adj))) +
-  geom_point() +
-  geom_point(colour = "black", pch = 21) +
+  #geom_point() +
+  ggrastr::rasterise(geom_point(colour = "black", pch = 21), dpi = setDpi) +
   scale_fill_distiller(palette = "BuGn", direction = 1) +
-  theme_light()
+  theme_light() +
+  xlab("Expression of *Nrgn* ") +
+  theme(axis.title = ggtext::element_markdown())
 
 pGeneLoc <- spsf |>
   ggplot(aes(x = Nrgn, y = locEffect, fill = -log10(p.val.adj))) +
-  geom_point() +
-  geom_point(colour = "black", pch = 21) +
+  ggrastr::rasterise(geom_point(colour = "black", pch = 21), dpi = setDpi) +
   scale_fill_distiller(palette = "BuGn", direction = 1) +
   theme_light() +
-  geom_density_2d(color = "cornflowerblue", bins = 7)
-
+  ggrastr::rasterise(geom_density_2d(color = "cornflowerblue", bins = 7)) +
+  xlab("Expression of *Nrgn* ") +
+  theme(axis.title = ggtext::element_markdown())
 
 pLocPval <- spsf |>
   ggplot(aes(fill = Nrgn, x = locEffect, y = -log10(p.val.adj))) +
-  geom_point() +
-  geom_point(colour = "black", pch = 21) +
+  ggrastr::rasterise(geom_point(colour = "black", pch = 21), dpi = setDpi) +
   scale_fill_distiller(palette = "BuPu", direction = 1) +
   theme_light() +
-  geom_density_2d(color = "cornflowerblue", bins = 7)
+  ggrastr::rasterise(geom_density_2d(color = "cornflowerblue", bins = 7)) +
+  xlab("Expression of *Nrgn* ") +
+  theme(axis.title = ggtext::element_markdown(),
+        legend.title=element_text(face = "italic"))
+
 
 psupploc <- pGeneLoc + pLocPval
 
+# Moran scatter plot
+# code from ?moran.plot
+mp <- moran.plot(spsf[["Nrgn"]], listw = direct_neigbours)
+xname <- attr(mp, "xname")
+
+mp <- cbind(mp, spsf)
+
+mp <- mp |>
+    mutate(significant = ifelse(locClusters == "Non-significant",
+                                "Non-significant", "Significant"))
+ggplot(mp, aes(x=x, y=wx, color = significant)) +
+    ggrastr::rasterise(geom_point(size = 0.5), dpi = setDpi) +
+    scale_color_manual(values = c("gray55", "black")) +
+    geom_smooth(formula=y ~ x, method="lm", color = "darkgreen") +
+    geom_hline(yintercept=mean(mp$wx), lty=2) +
+    geom_vline(xintercept=mean(mp$x), lty=2) + theme_minimal() +
+    #geom_point(data=mp[mp$is_inf,], aes(x=x, y=wx), shape=9) +
+    #geom_text(data=mp[mp$is_inf,], aes(x=x, y=wx, label=labels, vjust=1.5)) +
+    labs(x = "Expression of *Nrgn* ",
+         y = "Spatially lagged<br>expression of *Nrgn*",
+         color = "Significance\n(Local Moran's I)") +
+    geom_density2d(color = "cornflowerblue") +
+    guides(color = guide_legend(override.aes = list(size = 3))) +
+    theme(axis.title = ggtext::element_markdown()) -> moranSc
+
+moranSc
 
 ## Plot
 p2 <- pDetected + pLocEff_direct + pLocEff_pVal
@@ -219,9 +276,10 @@ bbox_use <- st_bbox(c(xmin = 14000, xmax = 18000, ymin = 158000, ymax = 162000))
 pKnn <- pKnn + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845", "#BF0D3E"),
                                     values = scales::rescale(c(-3,0,5,17)),
                                     guide = "colorbar", limits=c(-3,17)) +
-  labs(title = "Local Moran's I\n(10 Nearest Neighbours)", fill = "locI(KRT17)")
+  labs(title = "Local Moran's I\n(10 Nearest Neighbours)", fill = "locI(KRT17)") +
+  ggrastr::rasterize(pKnn[["layers"]], dpi = setDpi)
 
-pKnn
+pKnn[["layers"]][[1]] <- NULL
 
 # poly
 sfePoly <- runUnivariate(sfePoly,
@@ -241,7 +299,13 @@ sfePoly <- runUnivariate(sfePoly,
 pPoly <- pPoly + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845", "#BF0D3E"),
                                       values = scales::rescale(c(-3,0,5,17)),
                                       guide = "colorbar", limits=c(-3,17)) +
-  labs(title = "Local Moran's I\n(Contiguos Neighbours)", fill = "locI(KRT17)")
+  labs(title = "Local Moran's I\n(Contiguos Neighbours)", fill = "locI(KRT17)") +
+  # rasterize layer
+  ggrastr::rasterize(pPoly[["layers"]], dpi = setDpi)
+
+# remove original layer
+pPoly[["layers"]][[1]] <- NULL
+
 
 
 # distance
@@ -265,10 +329,12 @@ pDist <- pDist + scale_fill_gradientn(colours = c("#0028A5","#FAFAFA","#FFC845",
                                       values = scales::rescale(c(-3,0,5,17)),
                                       guide = "colorbar", limits=c(-3,17)) +
   labs(title = "Local Moran's I\n(Neighbours in 1000 pixel distance)", fill = "locI(KRT17)") +
-  theme_classic()
+  theme_classic() +
+  ggrastr::rasterize(pDist[["layers"]], dpi = setDpi)
 
+pDist[["layers"]][[1]] <- NULL
 
-fig2 <- pDetected + pLocEff_direct + pLocEff_pVal + pPoly + pKnn + pDist +
+fig2 <- pDetected + pLocEff_direct  + pCluster_direct + pPoly + pKnn + pDist +
   plot_layout(nrow = 2, ncol = 3) +
   plot_annotation(tag_levels = "A") &
   theme(
@@ -276,9 +342,8 @@ fig2 <- pDetected + pLocEff_direct + pLocEff_pVal + pPoly + pKnn + pDist +
     plot.tag = element_text(size = 12, hjust = 0, vjust = 0)
   )
 
-fig2
 
-ggsave("outs/localMoranOverview.pdf", fig2, width = 8, height = 8)
+ggsave("outs/localMoranOverview.pdf", fig2, width = 10, height = 7)
 
 
 ### Supplementary Figure Lattice part
@@ -314,7 +379,8 @@ pknncont <- data.frame(
 ) |>
   mutate(zero_neigh = ifelse((cont == 0 & knn != 0), "red", "black")) |>
   ggplot(aes(x = knn, y = cont, color = zero_neigh)) +
-  geom_point(size = 0.5, show.legend = FALSE) +
+  #geom_point(size = 0.5, show.legend = FALSE) +
+  ggrastr::rasterise(geom_point(colour = "black", size = 0.5), dpi = setDpi) +
   geom_abline(intercept = 0, slope = 1, col = "seagreen") +
   theme_light() +
   labs(
@@ -322,7 +388,7 @@ pknncont <- data.frame(
     y = "Local Moran's I \n(Contiguos Neighbours)"
   ) +
   coord_fixed(ratio = 1) +
-  geom_density_2d(color = "cornflowerblue") +
+  ggrastr::rasterise(geom_density_2d(color = "cornflowerblue")) +
   scale_color_manual(values = c("black", "red"))
 
 pDistcont <- data.frame(
@@ -331,9 +397,9 @@ pDistcont <- data.frame(
 ) |>
   mutate(zero_neigh = ifelse((cont == 0 & dist != 0), "red", "black")) |>
   ggplot(aes(x = dist, y = cont, color = zero_neigh)) +
-  geom_point(size = 0.5, show.legend = FALSE) +
+  ggrastr::rasterise(geom_point(colour = "black", size = 0.5), dpi = setDpi) +
   geom_abline(intercept = 0, slope = 1, col = "seagreen") +
-  geom_density_2d(color = "cornflowerblue") +
+  ggrastr::rasterise(geom_density_2d(color = "cornflowerblue")) +
   theme_light() +
   labs(
     x = "Local Moran's I \n(Neighbours in 1000 pixel distance)",
@@ -341,6 +407,8 @@ pDistcont <- data.frame(
   ) +
   coord_fixed(ratio = 1) +
   scale_color_manual(values = c("black", "red"))
+
+
 
 data.frame(
   knn = localResult(sfe, "localmoran", "KRT17")[, "Ii"],
@@ -367,15 +435,18 @@ AAAA
 AAAA
 AAAA
 BBBB
+BBBB
+CCCC
 "
 
 # supplementary figure
-psupp <- (pGeneLoc + pLocPval + pknncont + pDistcont) /  logExpHist +
+psupp <- (pGeneLoc + pLocPval + pknncont + pDistcont) / moranSc /
+    logExpHist +
   plot_layout(design = layout) +
   plot_annotation(tag_levels = "A")
 
 #plot
 psupp
 
-ggsave("outs/localMoranOverviewSupp.pdf", psupp, width = 8, height = 8)
+ggsave("outs/localMoranOverviewSupp.pdf", psupp, width = 8, height = 10)
 

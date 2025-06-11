@@ -128,7 +128,7 @@ pls <- lapply(zstack_list, function(zstack){
 p1 <- wrap_plots(pls, guides = 'collect', nrow = 3)
 p_total <- wrap_plots(list(p1, L_plot), ncol = 2) + plot_annotation(tag_levels = 'A', theme = theme(plot.title = element_text(size = 14)))
 
-ggsave('outs/pp_example.pdf', plot = p_total, width = 10, height = 12)
+ggsave('outs/pp_example.pdf', plot = p_total, width = 10, height = 12, dpi = 300)
 
 ### SI figure pp
 
@@ -172,5 +172,5 @@ p_scaled <- wrap_plots(p_ls_scaled)
 
 p <- wrap_plots(list(p_homo, p_inhomo, p_scaled), nrow = 3, guides = 'collect') + plot_annotation(tag_levels = 'A', theme = theme(plot.title = element_text(size = 14)))
 
-ggsave('outs/pp_function_comparison.pdf', plot = p, width = 10, height = 8)
+ggsave('outs/pp_function_comparison.pdf', plot = p, width = 10, height = 8, dpi = 300)
 
