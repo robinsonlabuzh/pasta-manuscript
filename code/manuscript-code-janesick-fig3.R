@@ -15,9 +15,9 @@ library(ggrastr)
 sfe <- STexampleData::Janesick_breastCancer_Xenium_rep1()
 
 ### code adapted from https://lmweber.org/OSTA/pages/crs-spat-stat.html ###
-### written by Samuel Gunz and Martin Emons 2025 ### 
+### written by Samuel Gunz and Martin Emons 2025 ###
 
-# load the official 10X annotations 
+# load the official 10X annotations
 labels <- read.xlsx("https://cdn.10xgenomics.com/raw/upload/v1695234604/Xenium%20Preview%20Data/Cell_Barcode_Type_Matrices.xlsx", sheet = 4)
 labels$cell_id <- (labels$Barcode)
 
@@ -93,10 +93,14 @@ p1 <- ggplot(resCross, aes(
        y = "Isotropic correction - CSR"
   ) +
   scale_colour_manual(values = c("#0028A5","#FFC845", "#BF0D3E")) +
-  geom_hline(aes(yintercept=0),linetype = "dashed", 
-             color = "black", linewidth = 1) +
+  # geom_hline(aes(yintercept=0),linetype = "dashed",
+  #            color = "black", linewidth = 1) +
+  geom_line(aes(x = .data[['r']], y = .data[['theo']]), linetype = "dashed",
+                        color = "black") +
   ggh4x::facet_wrap2(~elem1, strip = strip,) +
-  guides(color=guide_legend(override.aes=list(size=2))) 
+  guides(color=guide_legend(override.aes=list(size=2)))
+
+p1
 
 pAll <- p0/p1
 pAll <- pAll + plot_annotation(tag_levels = 'A') +
@@ -108,8 +112,13 @@ plot(pAll)
 #define intensity of the unmarked pattern for inhomogeneity correction
 df <- .speToDf(sfe)
 pp <- .dfToppp(df, marks = "Cluster")
-dens_image <- density(unmark(pp)) |> as.im()
-plot(dens_image)
+
+#dens_im <- density()
+dens_im <- density(unmark(pp))
+plot(dens_im)
+
+# set to correct scale as we have less points compared to unmarked
+scale <- sum(dens_im$v) / (dens_im$xstep * dens_im$ystep)
 
 resCross <- calcCrossMetricPerFov(
   sfe,
@@ -120,8 +129,8 @@ resCross <- calcCrossMetricPerFov(
   rSeq = seq(0, 500, length.out = 500),
   by = c("sample_id"),
   correction = 'iso',
-  lambdaI = dens_image,
-  lambdaJ = dens_image
+  ncores = 4,
+  lambdaX = dens_im * scale
 )
 
 resCross$`isotropic-theoretical` <- resCross$iso - resCross$theo
@@ -146,10 +155,12 @@ p1 <- ggplot(resCross, aes(
   ) +
   scale_colour_manual(values = c("#0028A5","#FFC845", "#BF0D3E"),
                       labels = c("DCIS 1", "DCIS 2", "Invasive Tumor")) +
-  geom_hline(aes(yintercept=0),linetype = "dashed", 
-             color = "black", linewidth = 1) +
+  geom_line(aes(x = .data[['r']], y = .data[['theo']]), linetype = "dashed",
+              color = "black") +
   ggh4x::facet_wrap2(~elem1, strip = strip,) +
-  guides(color=guide_legend(override.aes=list(size=2))) 
+  guides(color=guide_legend(override.aes=list(size=2)))
+
+p1
 
 pAll <- p0/p1
 pAll <- pAll + plot_annotation(tag_levels = 'A') +
@@ -165,7 +176,7 @@ library("sosta")
 allClusts <- sfe$Cluster |> unique()
 
 imD <- shapeIntensityImage(sfe, marks = "Cluster", imageCol = "sample_id",
-                           imageId = "sample01", markSelect = allClusts, 
+                           imageId = "sample01", markSelect = allClusts,
                            bndw = 100)
 
 imD
@@ -222,7 +233,7 @@ p1 <- ggplot(resCross, aes(
   ) +
   scale_colour_manual(values = c("#0028A5","#FFC845", "#BF0D3E"),
                       labels = c("DCIS 1", "DCIS 2", "Invasive Tumor")) +
-  geom_hline(aes(yintercept=0),linetype = "dashed", 
+  geom_hline(aes(yintercept=0),linetype = "dashed",
              color = "black", linewidth = 1) +
   ggh4x::facet_wrap2(~elem1, strip = strip,) +
   guides(color=guide_legend(override.aes=list(size=2)))
