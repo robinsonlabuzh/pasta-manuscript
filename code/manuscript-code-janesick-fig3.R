@@ -257,4 +257,4 @@ ggsave(plot =pAll, "outs/fig3.pdf", width = 10, height = 10, dpi = 100)
 
 pAllOptions <- pHomo / pInhomo / pWindow +
   plot_annotation(tag_levels = 'A')
-ggsave(plot =pAllOptions, "outs/fig3complete.pdf", width = 10, height = 20, dpi = 100)
+ggsave(plot =pAllOptions, "outs/fig3complete.pdf", width = 10, height = 15, dpi = 100)
