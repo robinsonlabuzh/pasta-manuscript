@@ -210,17 +210,17 @@ reducedDim(sfe, "localC_perm_multi") <- reducedDim(sfe, "localC_perm_multi") %>%
       `-log10p_adj Sim` < -log10(0.05) ~ 'Non-significant',),
       levels = c('Positive', 'Negative', 'Non-significant')),
     manual_cluster = factor(case_when(
-      localC_perm_multi < 1 & `-log10p_adj Sim` >= -log10(0.05) ~ 'Positive',
-      localC_perm_multi >= 1 & `-log10p_adj Sim` >= -log10(0.05) ~ 'Negative',
+      localC_perm_multi < 1 & `-log10p_adj Sim` >= -log10(0.05) ~ 'Homogeneous',
+      localC_perm_multi >= 1 & `-log10p_adj Sim` >= -log10(0.05) ~ 'Heterogeneous',
       `-log10p_adj Sim` < -log10(0.05) ~ 'Non-significant',),
-      levels = c('Positive', 'Negative', 'Non-significant'))
+      levels = c('Homogeneous', 'Heterogeneous', 'Non-significant'))
   )
 
 
 ### end ###
 
 # stored as spatially reduced dim; plot it in this way
-pMultivar <- spatialReducedDim(sfe, "localC_perm_multi", c(1, 11, 12),
+pMultivar <- spatialReducedDim(sfe, "localC_perm_multi", c(1, 11, 14),
                         size = 1E-7, alpha = 0.75,
                         scattermore = FALSE, divergent = TRUE,
                         diverge_center = 0, ncol = 1)
@@ -238,8 +238,13 @@ pDens <- cbind(reducedDim(sfe, "localC_perm_multi"), spatialCoords(sfe)) |>
 pMultivar <- rastVoyPlotList(pMultivar, dpi = 180)
 pDens <- rastVoyPlot(pDens, dpi = 180)
 
+colorMap <- RColorBrewer::brewer.pal(3, "Dark2")
+colorMap[[1]] <- "#00A9FF"
+colorMap[[3]] <- "#D1D3D5"
+
 pMultivar[[3]] <- pMultivar[[3]] +
-    guides(color = guide_legend(override.aes = list(shape = 16, size = 3)))
+    guides(color = guide_legend(override.aes = list(shape = 16, size = 3))) +
+    scale_color_manual(values = colorMap)
 
 # pMultivar[[3]] + scale_color_manual(values = c("blue","red", "grey")) +
 #   guides(color = guide_legend(override.aes = list(size = 3))) +
