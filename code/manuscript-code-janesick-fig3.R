@@ -52,11 +52,11 @@ resUnmarked <- calcMetricPerFov(
   marks = 'unmarked',
   rSeq = seq(0, 1000, length.out = 500),
   by = c("sample_id"),
-  correction = 'iso'
+  correction = 'trans'
 )
 
 plotMetricPerFov(resUnmarked, theo = TRUE,
-                      correction = "iso", x = "r", imageId = "sample_id"
+                      correction = "trans", x = "r", imageId = "sample_id"
 )
 
 ##### calculate homo L on the entire tissue ####
@@ -69,18 +69,18 @@ resCross <- calcCrossMetricPerFov(
   marks = 'Cluster',
   rSeq = seq(0, 1000, length.out = 500),
   by = c("sample_id"),
-  correction = 'iso'
+  correction = 'trans'
 )
 
-resCross$`isotropic-theoretical` <- resCross$iso - resCross$theo
+resCross$`translation-theoretical` <- resCross$trans - resCross$theo
 
 resCross <- resCross %>% separate(col = selection, into = c("elem1", "elem2"), sep = "and", remove = FALSE)
 strip <- ggh4x::strip_themed(background_x = ggh4x::elem_list_rect(fill = c("#0028A5","#FFC845", "#BF0D3E")),
                              text_x = ggh4x::elem_list_text(colour = "white"))
 
 
-p1 <- ggplot(resCross, aes(
-  x = .data[['r']], y = .data[['isotropic-theoretical']],
+pHomo <- ggplot(resCross, aes(
+  x = .data[['r']], y = .data[['translation-theoretical']],
   group = factor(.data[['elem2']])
 )) +
   geom_line(aes(color = factor(.data[['elem2']])), linewidth = 1.25) +
@@ -90,19 +90,19 @@ p1 <- ggplot(resCross, aes(
          "Homogeneous L-function in the entire Window",
        colour = "second cell type",
        x = "radius (µm)",
-       y = "Isotropic correction - CSR"
+       y = "Translation correction - CSR"
   ) +
   scale_colour_manual(values = c("#0028A5","#FFC845", "#BF0D3E")) +
   # geom_hline(aes(yintercept=0),linetype = "dashed",
   #            color = "black", linewidth = 1) +
-  geom_line(aes(x = .data[['r']], y = .data[['theo']]), linetype = "dashed",
-                        color = "black") +
+  geom_hline(aes(yintercept=0),linetype = "dashed",
+             color = "black", linewidth = 1) +
   ggh4x::facet_wrap2(~elem1, strip = strip,) +
   guides(color=guide_legend(override.aes=list(size=2)))
 
-p1
+pHomo
 
-pAll <- p0/p1
+pAll <- p0/pHomo
 pAll <- pAll + plot_annotation(tag_levels = 'A') +
   plot_layout(heights = c(3, 1))
 plot(pAll)
@@ -128,20 +128,20 @@ resCross <- calcCrossMetricPerFov(
   marks = 'Cluster',
   rSeq = seq(0, 500, length.out = 500),
   by = c("sample_id"),
-  correction = 'iso',
+  correction = 'trans',
   ncores = 4,
   lambdaX = dens_im * scale
 )
 
-resCross$`isotropic-theoretical` <- resCross$iso - resCross$theo
+resCross$`translation-theoretical` <- resCross$trans - resCross$theo
 
 resCross <- resCross %>% separate(col = selection, into = c("elem1", "elem2"), sep = "and", remove = FALSE)
 strip <- ggh4x::strip_themed(background_x = ggh4x::elem_list_rect(fill = c("#0028A5","#FFC845", "#BF0D3E")),
                              text_x = ggh4x::elem_list_text(colour = "white"))
 
 
-p1 <- ggplot(resCross, aes(
-  x = .data[['r']], y = .data[['isotropic-theoretical']],
+pInhomo <- ggplot(resCross, aes(
+  x = .data[['r']], y = .data[['translation-theoretical']],
   group = factor(.data[['elem2']])
 )) +
   geom_line(aes(color = factor(.data[['elem2']])), linewidth = 1.25) +
@@ -151,18 +151,18 @@ p1 <- ggplot(resCross, aes(
     "Inhomogeneous L-function in the entire Window",
     colour = "second cell type",
     x = "radius (µm)",
-    y = "Isotropic correction - CSR"
+    y = "Translation correction - CSR"
   ) +
   scale_colour_manual(values = c("#0028A5","#FFC845", "#BF0D3E"),
                       labels = c("DCIS 1", "DCIS 2", "Invasive Tumor")) +
-  geom_line(aes(x = .data[['r']], y = .data[['theo']]), linetype = "dashed",
-              color = "black") +
+  geom_hline(aes(yintercept=0),linetype = "dashed",
+             color = "black", linewidth = 1) +
   ggh4x::facet_wrap2(~elem1, strip = strip,) +
   guides(color=guide_legend(override.aes=list(size=2)))
 
-p1
+pInhomo
 
-pAll <- p0/p1
+pAll <- p0/pInhomo
 pAll <- pAll + plot_annotation(tag_levels = 'A') +
   plot_layout(heights = c(3, 1))
 plot(pAll)
@@ -205,7 +205,7 @@ resCross <- calcCrossMetricPerFov(
   marks = 'Cluster',
   rSeq = seq(0, 500, length.out = 500),
   by = c("sample_id"),
-  correction = 'translate',
+  correction = 'trans',
   window = as.owin(regions)
 )
 
@@ -218,7 +218,7 @@ resCross$elem1  <- resCross$elem1 %>% gsub("_", " ", .)
 strip <- ggh4x::strip_themed(background_x = ggh4x::elem_list_rect(fill = c("#0028A5","#FFC845", "#BF0D3E")),
                              text_x = ggh4x::elem_list_text(colour = "white"))
 
-p1 <- ggplot(resCross, aes(
+pWindow <- ggplot(resCross, aes(
   x = .data[['r']], y = .data[['translation-theoretical']],
   group = factor(.data[['elem2']])
 )) +
@@ -248,9 +248,13 @@ p0 <- p0 + geom_sf(
 
 p0 <- rasterize(p0, layers='Point', dpi=200)
 
-pAll <- p0/p1
+pAll <- p0/pWindow
 pAll <- pAll + plot_annotation(tag_levels = 'A') +
   plot_layout(heights = c(3, 1))
 
 pAll
 ggsave(plot =pAll, "outs/fig3.pdf", width = 10, height = 10, dpi = 100)
+
+pAllOptions <- pHomo / pInhomo / pWindow +
+  plot_annotation(tag_levels = 'A')
+ggsave(plot =pAllOptions, "outs/fig3complete.pdf", width = 10, height = 20, dpi = 100)
